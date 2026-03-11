@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IKBAL - Ikatan Keluarga Besar Alumni Lubabuth Tholibin</title>
+    
+    <!-- Memuat Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Konfigurasi Tailwind Custom -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#141E33',
+                            900: '#0F172A',
+                            950: '#020617',
+                        },
+                        pesantren: {
+                            green: '#10b981', // Emerald green
+                            gold: '#fbbf24',  // Amber/Gold
+                            dark: '#064e3b',  // Dark green
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Merriweather', serif; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+
+        @keyframes float {
+            0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+            33% { transform: translate(30px, -50px) scale(1.1) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) scale(0.9) rotate(-5deg); }
+            100% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+        }
+        .blob-1 { animation: float 12s infinite ease-in-out; }
+        .blob-2 { animation: float 15s infinite ease-in-out reverse; }
+        .blob-3 { animation: float 18s infinite ease-in-out 2s; }
+
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.6); }
+
+        /* Hak Akses Pengurus */
+        .admin-ui { display: none !important; }
+        body.is-admin .admin-ui { display: flex !important; }
+        body.is-admin th.admin-ui, body.is-admin td.admin-ui { display: table-cell !important; }
+        
+        .guest-ui { display: flex !important; }
+        body.is-admin .guest-ui { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen relative overflow-x-hidden selection:bg-pesantren-green selection:text-white">
+
+    <!-- Global Loading Overlay -->
+    <div id="global-loading" class="hidden fixed inset-0 bg-slate-950/80 z-[500] flex flex-col items-center justify-center backdrop-blur-sm">
+        <div class="w-12 h-12 border-4 border-slate-700 border-t-pesantren-green rounded-full animate-spin mb-4"></div>
+        <p class="text-pesantren-green font-bold tracking-widest animate-pulse">Menghubungkan ke Database...</p>
+    </div>
+
+    <!-- Ornamen Latar Belakang (Blobs) -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-20">
+        <div class="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-pesantren-green blur-[120px] blob-1"></div>
+        <div class="absolute top-[30%] right-[-10%] w-[500px] h-[500px] rounded-full bg-pesantren-gold blur-[150px] blob-2 opacity-50"></div>
+        <div class="absolute bottom-[-20%] left-[20%] w-[700px] h-[700px] rounded-full bg-pesantren-dark blur-[130px] blob-3"></div>
+    </div>
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- SIDEBAR (Dekstop & Mobile) -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-72 glass-card border-r border-pesantren-green/10 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col h-full bg-slate-900/90">
+            <!-- Header Sidebar -->
+            <div class="flex items-center justify-between p-6 border-b border-slate-800/50">
+                <div class="flex items-center gap-3">
+                    <img src="https://i.postimg.cc/dtcCfxNM/2437-removebg-preview.png" alt="Logo IKBAL" class="w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+                    <div>
+                        <span class="text-2xl font-black text-white tracking-tight uppercase block leading-none">IKBAL</span>
+                        <span class="text-[9px] text-pesantren-gold font-bold uppercase tracking-[0.2em]">Pusat Data Alumni</span>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Navigasi Menu -->
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto no-scrollbar">
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Navigasi Utama</p>
+                
+                <!-- Menu Item: Beranda -->
+                <a href="#" onclick="switchMenu('beranda', this)" id="nav-beranda" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl bg-pesantren-green/10 text-pesantren-green border border-pesantren-green/20 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] group">
+                    <i class="ph-fill ph-mosque text-xl"></i>
+                    <span class="font-semibold text-sm">Beranda Pusat</span>
+                </a>
+                
+                <!-- Menu Item: Buku Induk -->
+                <a href="#" onclick="switchMenu('induk', this)" id="nav-induk" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent transition-all group">
+                    <div class="flex items-center gap-4">
+                        <i class="ph ph-users-three text-xl group-hover:text-pesantren-gold transition-colors"></i>
+                        <span class="font-semibold text-sm">Buku Induk Alumni</span>
+                    </div>
+                    <span class="badge-count bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors">0</span>
+                </a>
+                
+                <!-- Menu Item: Data Angkatan -->
+                <a href="#" onclick="switchMenu('angkatan', this)" id="nav-angkatan" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent transition-all group">
+                    <i class="ph ph-books text-xl group-hover:text-blue-400 transition-colors"></i>
+                    <span class="font-semibold text-sm">Data Angkatan (Liting)</span>
+                </a>
+                
+                <!-- Menu Item: Kiprah & Profesi -->
+                <a href="#" onclick="switchMenu('profesi', this)" id="nav-profesi" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent transition-all group">
+                    <i class="ph ph-briefcase text-xl group-hover:text-emerald-400 transition-colors"></i>
+                    <span class="font-semibold text-sm">Kiprah & Profesi</span>
+                </a>
+
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 mt-8">Administrasi</p>
+                <a href="#" onclick="switchMenu('import', this)" id="nav-import" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent transition-all group">
+                    <i class="ph ph-file-arrow-up text-xl group-hover:text-slate-300 transition-colors"></i>
+                    <span class="font-semibold text-sm">Export Data</span>
+                </a>
+            </nav>
+
+            <!-- Bottom Profile (Guest UI) -->
+            <div class="guest-ui p-4 m-4 rounded-2xl bg-slate-900 border border-slate-800 items-center justify-between shadow-lg cursor-pointer hover:bg-slate-800 transition-colors" onclick="showLoginModal()">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border border-slate-700">
+                        <i class="ph-fill ph-user text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-300">Mode Tamu</p>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1">Akses Pengurus <i class="ph-bold ph-lock-key"></i></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Profile (Admin UI) -->
+            <div class="admin-ui p-4 m-4 rounded-2xl bg-slate-900 border border-slate-800 items-center justify-between shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-pesantren-dark flex items-center justify-center font-bold text-pesantren-gold border-2 border-pesantren-green/30">
+                        <i class="ph-fill ph-shield-check text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-white">Pengurus Pusat</p>
+                        <p class="text-[10px] text-pesantren-green font-bold uppercase tracking-widest flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-pesantren-green inline-block animate-pulse"></span> Aktif
+                        </p>
+                    </div>
+                </div>
+                <button onclick="logoutAdmin()" class="text-slate-400 hover:text-red-400 transition-colors" title="Keluar">
+                    <i class="ph ph-sign-out text-xl"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- KONTEN UTAMA -->
+        <main class="flex-1 h-full overflow-y-auto custom-scrollbar relative w-full bg-slate-950/50">
+            
+            <!-- Navbar Mobile & Desktop -->
+            <header class="sticky top-0 z-40 glass-card border-b border-pesantren-green/10 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-300 hover:text-white bg-slate-800 p-2 rounded-lg transition-colors">
+                        <i class="ph ph-list text-2xl"></i>
+                    </button>
+                    <div>
+                        <h1 id="header-title" class="text-xl sm:text-2xl font-bold text-white leading-tight font-serif italic">Ahlan wa Sahlan!</h1>
+                        <p id="header-desc" class="text-xs text-slate-400 hidden sm:block mt-1">Sistem Informasi Terpadu Alumni PP. Lubabuth Tholibin Sanggubanyu</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 sm:gap-6">
+                    <button onclick="openAlumniModal()" class="admin-ui bg-pesantren-green hover:bg-emerald-400 text-slate-950 px-5 py-2.5 rounded-xl text-sm font-bold items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
+                        <i class="ph-bold ph-user-plus text-lg"></i> <span class="hidden sm:inline">Tambah Alumni</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+                
+                <!-- =============== CARD STATS (BERANDA) =============== -->
+                <div id="card-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 fade-in-up">
+                    
+                    <div onclick="switchMenu('induk', document.getElementById('nav-induk'))" class="glass-card p-6 rounded-3xl border border-slate-800 relative overflow-hidden group hover:border-pesantren-green/50 transition-colors cursor-pointer shadow-lg hover:shadow-pesantren-green/10">
+                        <div class="absolute -right-4 -top-4 text-pesantren-green/5 group-hover:text-pesantren-green/10 group-hover:scale-110 transition-all duration-500">
+                            <i class="ph-fill ph-users-three text-9xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-semibold mb-1 text-xs uppercase tracking-widest">Total Alumni Terdata</p>
+                        <h2 class="text-4xl font-extrabold text-white mb-2">0<span class="text-lg text-slate-500 font-medium ml-1">Orang</span></h2>
+                        <p class="text-xs text-pesantren-green font-medium flex items-center gap-1"><i class="ph-bold ph-check-circle"></i> Terverifikasi</p>
+                    </div>
+
+                    <div onclick="switchMenu('angkatan', document.getElementById('nav-angkatan'))" class="glass-card p-6 rounded-3xl border border-slate-800 relative overflow-hidden group hover:border-pesantren-gold/50 transition-colors delay-100 fade-in-up cursor-pointer shadow-lg hover:shadow-pesantren-gold/10">
+                        <div class="absolute -right-4 -top-4 text-pesantren-gold/5 group-hover:text-pesantren-gold/10 group-hover:scale-110 transition-all duration-500">
+                            <i class="ph-fill ph-books text-9xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-semibold mb-1 text-xs uppercase tracking-widest">Rentang Angkatan</p>
+                        <h2 class="text-4xl font-extrabold text-white mb-2">0<span class="text-lg text-slate-500 font-medium ml-1">Liting</span></h2>
+                        <p class="text-xs text-slate-500 font-medium flex items-center gap-1">Berdasarkan tahun lulus</p>
+                    </div>
+
+                    <div onclick="switchMenu('profesi', document.getElementById('nav-profesi'))" class="glass-card p-6 rounded-3xl border border-slate-800 relative overflow-hidden group hover:border-blue-500/50 transition-colors delay-200 fade-in-up cursor-pointer shadow-lg hover:shadow-blue-500/10">
+                        <div class="absolute -right-4 -top-4 text-blue-500/5 group-hover:text-blue-500/10 group-hover:scale-110 transition-all duration-500">
+                            <i class="ph-fill ph-student text-9xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-semibold mb-1 text-xs uppercase tracking-widest">Pendidikan/Karir Aktif</p>
+                        <h2 class="text-4xl font-extrabold text-white mb-2">0<span class="text-lg text-slate-500 font-medium ml-1">Orang</span></h2>
+                        <p class="text-xs text-slate-500 font-medium flex items-center gap-1">Mengabdi pada masyarakat</p>
+                    </div>
+
+                    <div onclick="switchMenu('induk', document.getElementById('nav-induk')); document.getElementById('searchInput').value = 'mentor'; document.getElementById('searchInput').dispatchEvent(new Event('input'));" class="glass-card p-6 rounded-3xl border border-slate-800 relative overflow-hidden group hover:border-purple-500/50 transition-colors delay-300 fade-in-up cursor-pointer shadow-lg hover:shadow-purple-500/10">
+                        <div class="absolute -right-4 -top-4 text-purple-500/5 group-hover:text-purple-500/10 group-hover:scale-110 transition-all duration-500">
+                            <i class="ph-fill ph-chalkboard-teacher text-9xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-semibold mb-1 text-xs uppercase tracking-widest">Mentor / Pembimbing</p>
+                        <h2 class="text-4xl font-extrabold text-white mb-2">0<span class="text-lg text-slate-500 font-medium ml-1">Alumni</span></h2>
+                        <p class="text-xs text-slate-500 font-medium flex items-center gap-1">Bersedia membimbing junior</p>
+                    </div>
+                </div>
+
+                <!-- =============== CARD TABLE (BUKU INDUK / BERANDA BAWAH) =============== -->
+                <div id="card-table" class="glass-card rounded-3xl border border-slate-800/80 overflow-hidden fade-in-up delay-200 flex flex-col h-[600px] shadow-2xl transition-all duration-500">
+                    
+                    <!-- Header Tabel & Pencarian -->
+                    <div class="p-6 border-b border-slate-800/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/30">
+                        <div>
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="ph-fill ph-address-book text-pesantren-green"></i> Buku Induk Alumni
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Data silaturahmi seluruh mutakhorrijin/mutakhorrijat.</p>
+                        </div>
+                        
+                        <div class="flex gap-3 w-full sm:w-auto">
+                            <div class="relative flex-1 sm:w-72">
+                                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                                <input type="text" id="searchInput" placeholder="Cari nama, daerah, angkatan..." class="w-full bg-slate-950 border border-slate-700 text-sm rounded-xl pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-pesantren-green focus:ring-1 focus:ring-pesantren-green transition-all shadow-inner">
+                            </div>
+                            <button onclick="fetchAlumniData()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 p-2.5 rounded-xl transition-colors flex items-center justify-center" title="Sinkronkan dengan Google Sheet">
+                                <i class="ph ph-arrows-clockwise text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Area Tabel -->
+                    <div class="flex-1 overflow-auto custom-scrollbar bg-slate-900/10">
+                        <table class="w-full text-left border-collapse min-w-[900px]">
+                            <thead class="sticky top-0 bg-slate-900/95 backdrop-blur-md z-10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                                <tr>
+                                    <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-800 w-16 text-center">No</th>
+                                    <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-800">Nama & Asal Daerah</th>
+                                    <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-800 text-center">Tahun Angkatan</th>
+                                    <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-800">No. WhatsApp</th>
+                                    <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-800">Kiprah / Profesi Saat Ini</th>
+                                    <th class="admin-ui py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-800 text-right">Opsi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alumniTableBody" class="divide-y divide-slate-800/30">
+                                <!-- Data akan dimuat dari Google Sheets menggunakan JavaScript -->
+                                <tr id="no-data-msg" class="hidden">
+                                    <td colspan="6" class="py-16 text-center text-slate-500 font-semibold bg-slate-900/20">
+                                        <div class="flex flex-col items-center justify-center opacity-70">
+                                            <i class="ph-fill ph-folder-open text-5xl mb-3 text-slate-600"></i>
+                                            <p class="text-base text-slate-400">Data alumni tidak ditemukan.</p>
+                                            <p class="text-xs text-slate-500 mt-1 font-normal">Coba gunakan kata kunci pencarian yang lain atau pastikan koneksi internet stabil.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Footer Tabel (Pagination / Info) -->
+                    <div class="p-4 border-t border-slate-800/50 bg-slate-900/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-400">
+                        <span id="table-info">Menampilkan seluruh data dari database</span>
+                    </div>
+                </div>
+
+                <!-- =============== CARD DATA ANGKATAN (SEMBUNYI BY DEFAULT) =============== -->
+                <div id="card-angkatan" class="hidden glass-card p-6 md:p-8 rounded-3xl border border-slate-800/80 fade-in-up shadow-2xl">
+                    <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="ph-fill ph-books text-blue-400 text-2xl"></i> Sebaran Data Angkatan
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Distribusi statistik jumlah alumni berdasarkan tahun kelulusan/liting.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="angkatanGrid">
+                        <!-- Data Angkatan dimuat disini -->
+                    </div>
+                </div>
+
+                <!-- =============== CARD KIPRAH & PROFESI (SEMBUNYI BY DEFAULT) =============== -->
+                <div id="card-profesi" class="hidden glass-card p-6 md:p-8 rounded-3xl border border-slate-800/80 fade-in-up shadow-2xl">
+                     <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="ph-fill ph-briefcase text-emerald-400 text-2xl"></i> Kiprah & Profesi
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Pemetaan peta sebaran bidang pengabdian dan karir para alumni.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="profesiGrid">
+                        <!-- Data Profesi dimuat disini -->
+                    </div>
+                </div>
+
+                <!-- =============== CARD IMPORT/EXPORT (SEMBUNYI BY DEFAULT) =============== -->
+                <div id="card-import" class="hidden glass-card p-6 md:p-8 rounded-3xl border border-slate-800/80 fade-in-up shadow-2xl">
+                    <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="ph-fill ph-file-arrow-up text-slate-300 text-2xl"></i> Export Data
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Cadangkan data (backup) ke format Excel (CSV).</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="bg-slate-900/50 border border-slate-700/50 p-6 rounded-2xl flex flex-col items-center text-center hover:border-pesantren-green/50 transition-colors group">
+                            <div class="w-20 h-20 bg-pesantren-green/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i class="ph-fill ph-file-csv text-5xl text-pesantren-green"></i>
+                            </div>
+                            <h4 class="font-bold text-white mb-2">Export Data (Unduh)</h4>
+                            <p class="text-xs text-slate-400 mb-6">Unduh seluruh database alumni saat ini ke dalam format CSV untuk keperluan arsip atau cetak.</p>
+                            <button onclick="exportToCSV()" class="bg-pesantren-green text-slate-950 px-6 py-3 rounded-xl font-bold w-full md:w-auto hover:bg-emerald-400 transition-colors shadow-lg">Unduh Database CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Login Pengurus -->
+    <div id="loginModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 fade-in-up">
+        <div class="bg-slate-900 border border-pesantren-green/20 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"><i class="ph ph-x text-xl"></i></button>
+            <div class="w-16 h-16 rounded-full bg-pesantren-dark/50 flex items-center justify-center mx-auto mb-4 border border-pesantren-green/30">
+                <i class="ph-fill ph-lock-key text-3xl text-pesantren-gold"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Akses Pengurus</h3>
+            <p class="text-xs text-slate-400 mb-6">Masukkan kata sandi rahasia untuk mengelola data alumni.</p>
+            
+            <input type="password" id="adminPassword" placeholder="Kata Sandi" class="w-full bg-slate-950 border border-slate-700 text-center rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-pesantren-green focus:ring-1 focus:ring-pesantren-green transition-all mb-4" onkeypress="handleLoginKey(event)">
+            
+            <p id="loginError" class="text-red-400 text-xs font-semibold mb-4 hidden">Kata sandi salah!</p>
+            
+            <button onclick="checkPassword()" class="w-full bg-pesantren-green hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]">Login</button>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Alumni (TIDAK ADA FOTO) -->
+    <div id="formModal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 fade-in-up overflow-y-auto no-scrollbar">
+        <div class="bg-slate-900 border border-slate-700 p-6 md:p-8 rounded-3xl shadow-2xl max-w-2xl w-full relative my-auto">
+            <button onclick="closeFormModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"><i class="ph ph-x text-2xl"></i></button>
+            <h3 class="text-2xl font-bold text-white mb-6 border-b border-slate-800 pb-4" id="modal-title">Formulir Data Alumni</h3>
+            
+            <input type="hidden" id="alumni-index">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Nama Lengkap</label>
+                    <input type="text" id="input-nama" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-pesantren-green outline-none" placeholder="Contoh: Fulan, S.Ag">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tahun Angkatan</label>
+                    <input type="number" id="input-angkatan" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-pesantren-green outline-none" placeholder="Contoh: 2015">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Kiprah / Profesi</label>
+                    <input type="text" id="input-kerja" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-pesantren-green outline-none" placeholder="Contoh: Guru">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Nomor WhatsApp</label>
+                    <input type="text" id="input-wa" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-pesantren-green outline-none" placeholder="Contoh: 08123456789">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Alamat / Instansi</label>
+                    <input type="text" id="input-bio" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-pesantren-green outline-none" placeholder="Detail daerah atau nama instansi">
+                </div>
+                <div class="md:col-span-2 flex items-center justify-between bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        Siap Menjadi Mentor / Pembimbing?
+                    </label>
+                    <input type="checkbox" id="input-mentor" class="w-5 h-5 accent-pesantren-green rounded border-slate-700 bg-slate-900 cursor-pointer">
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button onclick="closeFormModal()" class="px-5 py-2.5 rounded-xl font-bold text-slate-400 hover:bg-slate-800 transition-colors">Batal</button>
+                <button onclick="saveAlumni()" class="bg-pesantren-green hover:bg-emerald-400 text-slate-950 px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Fungsionalitas -->
+    <script>
+        // === KONFIGURASI API GOOGLE SHEETS ===
+        const API_KEY = 'AIzaSyBg6fPlym5UxIoo9O5FtERCTiZs7mttezQ'; 
+        const SPREADSHEET_ID = '19l9DHLZ0u0YUqu917rV46L63sfHDId6WsmXOvFZct0E'; 
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyldCw6n22v24l9TIniwUQK3cg_lid94Z_j2-5aKdaAjDYHj6RQAmxNF7bW8_luhGZB/exec'; 
+
+        let alumniData = []; // Menyimpan data dari database
+
+        // Logika Sidebar Mobile
+        const sidebar = document.getElementById('sidebar');
+        function toggleSidebar() {
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+            } else {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
+            }
+        }
+
+        // Logika Navigasi Menu Utama
+        function switchMenu(menuId, element) {
+            // Reset state (warna) semua tombol menu navigasi
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('bg-pesantren-green/10', 'text-pesantren-green', 'border-pesantren-green/20');
+                link.classList.add('text-slate-400', 'border-transparent');
+                
+                const badge = link.querySelector('.badge-count');
+                if(badge) {
+                    badge.classList.remove('bg-pesantren-green/20', 'text-pesantren-green', 'border-pesantren-green/30');
+                    badge.classList.add('bg-slate-800', 'text-slate-400', 'border-slate-700');
+                }
+            });
+
+            // Beri warna aktif (highlight) pada menu yang diklik
+            if (element) {
+                element.classList.remove('text-slate-400', 'border-transparent');
+                element.classList.add('bg-pesantren-green/10', 'text-pesantren-green', 'border-pesantren-green/20');
+                
+                const badge = element.querySelector('.badge-count');
+                if(badge) {
+                    badge.classList.remove('bg-slate-800', 'text-slate-400', 'border-slate-700');
+                    badge.classList.add('bg-pesantren-green/20', 'text-pesantren-green', 'border-pesantren-green/30');
+                }
+            }
+
+            // Logika pergantian tampilan konten (View Switcher)
+            const cardStats = document.getElementById('card-stats');
+            const cardTable = document.getElementById('card-table');
+            const cardAngkatan = document.getElementById('card-angkatan');
+            const cardProfesi = document.getElementById('card-profesi');
+            const cardImport = document.getElementById('card-import');
+            
+            const headerTitle = document.getElementById('header-title');
+            const headerDesc = document.getElementById('header-desc');
+
+            cardStats.classList.add('hidden');
+            cardTable.classList.add('hidden');
+            cardAngkatan.classList.add('hidden');
+            cardProfesi.classList.add('hidden');
+            if(cardImport) cardImport.classList.add('hidden');
+
+            [cardStats, cardTable, cardAngkatan, cardProfesi, cardImport].forEach(el => {
+                if(el) {
+                    el.classList.remove('fade-in-up');
+                    void el.offsetWidth;
+                }
+            });
+
+            if (menuId === 'beranda') {
+                headerTitle.innerText = "Ahlan wa Sahlan!";
+                headerDesc.innerText = "Sistem Informasi Terpadu Alumni PP. Lubabuth Tholibin Sanggubanyu";
+
+                cardStats.classList.remove('hidden');
+                cardTable.classList.remove('hidden');
+                cardStats.classList.add('fade-in-up');
+                cardTable.classList.add('fade-in-up');
+                cardTable.classList.remove('h-[calc(100vh-10rem)]');
+                cardTable.classList.add('h-[600px]');
+            } 
+            else if (menuId === 'induk') {
+                headerTitle.innerText = "Buku Induk Alumni";
+                headerDesc.innerText = "Tabel pencarian data lengkap dan status aktif anggota IKBAL.";
+
+                cardTable.classList.remove('hidden');
+                cardTable.classList.add('fade-in-up');
+                cardTable.classList.remove('h-[600px]');
+                cardTable.classList.add('h-[calc(100vh-10rem)]');
+            }
+            else if (menuId === 'angkatan') {
+                headerTitle.innerText = "Data Liting / Angkatan";
+                headerDesc.innerText = "Pemetaan sebaran jumlah alumni berdasarkan tahun kelulusan/boyong.";
+
+                cardAngkatan.classList.remove('hidden');
+                cardAngkatan.classList.add('fade-in-up');
+            }
+            else if (menuId === 'profesi') {
+                headerTitle.innerText = "Kiprah & Profesi";
+                headerDesc.innerText = "Detail penyebaran pengabdian alumni di tengah masyarakat.";
+
+                cardProfesi.classList.remove('hidden');
+                cardProfesi.classList.add('fade-in-up');
+            }
+            else if (menuId === 'import') {
+                headerTitle.innerText = "Administrasi Data";
+                headerDesc.innerText = "Sistem pencadangan dan sinkronisasi database IKBAL.";
+
+                cardImport.classList.remove('hidden');
+                cardImport.classList.add('fade-in-up');
+            }
+
+            if (window.innerWidth < 1024) {
+                toggleSidebar();
+            }
+        }
+
+        // Logika Fitur Pencarian Tabel
+        const searchInput = document.getElementById('searchInput');
+        
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const filtered = alumniData.filter(a => 
+                a.nama.toLowerCase().includes(term) || 
+                a.angkatan.toLowerCase().includes(term) ||
+                a.kerja.toLowerCase().includes(term) ||
+                a.bio.toLowerCase().includes(term) ||
+                (a.mentor && term === 'mentor') // Memungkinkan pencarian khusus mentor
+            );
+            renderTable(filtered);
+        });
+
+        // Logika Mode Pengurus (Admin)
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function checkPassword() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === 'ikbal') {
+                document.body.classList.add('is-admin');
+                closeLoginModal();
+                switchMenu('induk', document.getElementById('nav-induk')); 
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function handleLoginKey(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        }
+
+        function logoutAdmin() {
+            document.body.classList.remove('is-admin');
+            switchMenu('beranda', document.getElementById('nav-beranda'));
+        }
+
+        // ==========================================
+        // LOGIKA FORMULIR & AKSI TABEL
+        // ==========================================
+
+        function openAlumniModal() {
+            if(!document.body.classList.contains('is-admin')) return;
+            document.getElementById('formModal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = "Tambah Data Alumni";
+            
+            document.getElementById('alumni-index').value = '';
+            document.getElementById('input-nama').value = '';
+            document.getElementById('input-angkatan').value = '';
+            document.getElementById('input-kerja').value = '';
+            document.getElementById('input-wa').value = '';
+            document.getElementById('input-bio').value = '';
+            document.getElementById('input-mentor').checked = false;
+        }
+
+        function closeFormModal() {
+            document.getElementById('formModal').classList.add('hidden');
+        }
+
+        function editData(index) {
+            if(!alumniData[index]) return;
+            openAlumniModal();
+            document.getElementById('modal-title').innerText = "Edit Data Alumni";
+            
+            const a = alumniData[index];
+            document.getElementById('alumni-index').value = a.originalIndex;
+            document.getElementById('input-nama').value = a.nama;
+            document.getElementById('input-angkatan').value = a.angkatan;
+            document.getElementById('input-kerja').value = a.kerja;
+            document.getElementById('input-wa').value = a.wa;
+            document.getElementById('input-bio').value = a.bio;
+            document.getElementById('input-mentor').checked = a.mentor;
+        }
+
+        async function deleteData(index) {
+            if(!alumniData[index]) return;
+            if(confirm("Yakin ingin menghapus data " + alumniData[index].nama + " secara permanen?")) {
+                await apiPost({ action: 'hapus', sheet: 'Sheet1', index: alumniData[index].originalIndex });
+            }
+        }
+
+        function showDetail(index) {
+            if(!alumniData[index]) return;
+            const data = alumniData[index];
+            alert(`--- DETAIL ALUMNI ---\n\nNama: ${data.nama}\nAngkatan: ${data.angkatan}\nProfesi: ${data.kerja}\nKontak WA: ${data.wa}\nLokasi: ${data.bio}\nMentor: ${data.mentor ? 'Ya' : 'Tidak'}`);
+        }
+
+        async function saveAlumni() {
+            const nama = document.getElementById('input-nama').value;
+            const angkatan = document.getElementById('input-angkatan').value;
+            
+            if(!nama || !angkatan) return alert("Nama dan Angkatan wajib diisi!");
+
+            const indexStr = document.getElementById('alumni-index').value;
+            // Disesuaikan dengan struktur 8 kolom baru
+            const payload = {
+                action: indexStr !== '' ? 'edit' : 'tambah',
+                sheet: 'Sheet1',
+                index: indexStr !== '' ? parseInt(indexStr) : '',
+                data: [
+                    nama, // A
+                    angkatan, // B
+                    document.getElementById('input-kerja').value, // C
+                    '-', // D (Email kosong)
+                    document.getElementById('input-wa').value, // E
+                    document.getElementById('input-bio').value, // F (Bio/Alamat)
+                    'Aktif', // G (Status)
+                    document.getElementById('input-mentor').checked ? 'TRUE' : 'FALSE' // H (Mentor)
+                ]
+            };
+            
+            closeFormModal();
+            await apiPost(payload);
+        }
+
+        async function apiPost(payload) {
+            document.getElementById('global-loading').classList.remove('hidden');
+            try {
+                const params = new URLSearchParams();
+                params.append("data", JSON.stringify(payload));
+
+                const res = await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: params
+                });
+                
+                const r = await res.json();
+                
+                if(r.status === 'success') {
+                    alert("Database IKBAL berhasil diperbarui.");
+                    await fetchAlumniData(); // Render ulang
+                } else {
+                    throw new Error(r.message || "Kesalahan pada server");
+                }
+            } catch(e) {
+                console.error("API Error:", e);
+                alert("Gagal memproses data. Pastikan status Apps Script berjalan baik dan di-deploy Anyone.");
+            }
+            document.getElementById('global-loading').classList.add('hidden');
+        }
+
+        function exportToCSV() {
+            if(alumniData.length === 0) return alert("Belum ada data untuk diunduh!");
+            
+            // Menambahkan BOM (\uFEFF) agar Excel bisa membaca karakter khusus (UTF-8) dengan sempurna
+            let csvContent = "\uFEFFNama,Angkatan,Pekerjaan,WhatsApp,Lokasi\n";
+            
+            alumniData.forEach(row => {
+                // Mencegah error CSV jika ada tanda kutip di dalam teks data
+                let nama = (row.nama || '').replace(/"/g, '""');
+                let angkatan = (row.angkatan || '').replace(/"/g, '""');
+                let kerja = (row.kerja || '').replace(/"/g, '""');
+                let wa = (row.wa || '').replace(/"/g, '""');
+                let bio = (row.bio || '').replace(/"/g, '""');
+
+                let rowStr = `"${nama}","${angkatan}","${kerja}","${wa}","${bio}"`;
+                csvContent += rowStr + "\r\n";
+            });
+            
+            // Menggunakan Blob API agar bisa menangani data dalam jumlah besar (ribuan baris) tanpa terpotong
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Data_Alumni_IKBAL.csv");
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Membersihkan memory cache
+            URL.revokeObjectURL(url);
+        }
+
+        // ==========================================
+        // LOGIKA KONEKSI DATABASE (GOOGLE SHEETS)
+        // ==========================================
+        
+        async function fetchAlumniData() {
+            document.getElementById('global-loading').classList.remove('hidden');
+            try {
+                // Menambahkan parameter waktu (cache-buster) agar selalu mengambil data terbaru dari Sheet
+                const ts = new Date().getTime();
+                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A2:H?key=${API_KEY}&t=${ts}`);
+                
+                if (!response.ok) throw new Error('Akses Google Sheets Ditolak / Tidak Ditemukan');
+                const result = await response.json();
+                
+                // Format Data dengan melacak nomor baris asli (originalIndex)
+                alumniData = [];
+                (result.values || []).forEach((row, index) => {
+                    if (row[0]) { // Pastikan kolom Nama tidak kosong
+                        alumniData.push({
+                            arrayIndex: alumniData.length, // Index aman untuk array filter (BUG FIX)
+                            originalIndex: index, // Menyimpan indeks baris asli di Sheet
+                            nama: row[0] || '-',
+                            angkatan: row[1] || '-',
+                            kerja: row[2] || '-',
+                            email: row[3] || '-',
+                            wa: row[4] || '',
+                            bio: row[5] || 'Belum mencantumkan daerah/bio', 
+                            status: row[6] || 'Aktif',
+                            mentor: row[7] === 'TRUE'
+                        });
+                    }
+                });
+
+                renderTable();
+                updateDashboardStats();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('no-data-msg').classList.remove('hidden');
+                document.querySelector('#no-data-msg p').innerText = "Gagal memuat database. Pastikan pengaturan privasi Google Sheets adalah 'Siapa Saja (Anyone)'.";
+            } finally {
+                document.getElementById('global-loading').classList.add('hidden');
+            }
+        }
+
+        function renderTable(dataToRender = alumniData) {
+            const tbody = document.getElementById('alumniTableBody');
+            const noDataMsg = document.getElementById('no-data-msg');
+            
+            // Hapus baris lama KECUALI pesan kosong
+            Array.from(tbody.children).forEach(child => {
+                if (child.id !== 'no-data-msg') child.remove();
+            });
+
+            if (dataToRender.length === 0) {
+                noDataMsg.classList.remove('hidden');
+                return;
+            }
+
+            noDataMsg.classList.add('hidden');
+
+            dataToRender.forEach((a, i) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition-colors group';
+                
+                // Membuat inisial avatar dari huruf pertama nama
+                const initial = a.nama ? a.nama.charAt(0).toUpperCase() : '?';
+                const avatarHtml = `<div class="w-11 h-11 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-300 border-2 border-slate-700 group-hover:border-pesantren-green transition-colors">${initial}</div>`;
+                
+                const mentorBadge = a.mentor 
+                    ? `<div class="absolute -bottom-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-slate-900" title="Siap menjadi mentor"></div>` 
+                    : '';
+
+                const waLink = a.wa ? a.wa.replace(/\D/g, '').replace(/^0/, '62') : '';
+
+                tr.innerHTML = `
+                    <td class="py-4 px-6 text-center text-slate-500 font-semibold text-sm">${i + 1}</td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">${avatarHtml}${mentorBadge}</div>
+                            <div>
+                                <p class="font-bold text-white text-sm">${a.nama}</p>
+                                <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5"><i class="ph-fill ph-map-pin text-slate-500"></i> ${a.bio.substring(0,35)}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-800/50 text-slate-300 text-xs font-semibold border border-slate-700/50">
+                            Angkatan ${a.angkatan}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6">
+                        ${a.wa ? `<a href="https://wa.me/${waLink}" target="_blank" class="flex items-center gap-2 text-slate-300 text-sm hover:text-green-400 transition-colors w-max"><i class="ph-fill ph-whatsapp-logo text-green-500 text-lg"></i> ${a.wa}</a>` : `<span class="text-slate-600 text-xs italic">-</span>`}
+                    </td>
+                    <td class="py-4 px-6">
+                        <p class="text-sm font-semibold text-pesantren-gold">${a.kerja || '-'}</p>
+                    </td>
+                    <td class="admin-ui py-4 px-6 text-right">
+                        <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="showDetail(${a.arrayIndex})" class="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Detail Lengkap"><i class="ph ph-eye text-lg"></i></button>
+                            <button onclick="editData(${a.arrayIndex})" class="p-2 text-slate-400 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors" title="Edit Data"><i class="ph ph-pencil-simple text-lg"></i></button>
+                            <button onclick="deleteData(${a.arrayIndex})" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Hapus"><i class="ph ph-trash text-lg"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateDashboardStats() {
+            const statNumbers = document.querySelectorAll('#card-stats h2.text-4xl');
+            if(statNumbers.length >= 4) {
+                const total = alumniData.length;
+                const mentors = alumniData.filter(a => a.mentor).length;
+                const activeCareers = alumniData.filter(a => a.kerja && a.kerja !== '-').length;
+                const uniqueAngkatan = [...new Set(alumniData.map(a => a.angkatan))].length;
+
+                statNumbers[0].innerHTML = `${total}<span class="text-lg text-slate-500 font-medium ml-1">Orang</span>`;
+                statNumbers[1].innerHTML = `${uniqueAngkatan}<span class="text-lg text-slate-500 font-medium ml-1">Liting</span>`;
+                statNumbers[2].innerHTML = `${activeCareers}<span class="text-lg text-slate-500 font-medium ml-1">Orang</span>`;
+                statNumbers[3].innerHTML = `${mentors}<span class="text-lg text-slate-500 font-medium ml-1">Alumni</span>`;
+                
+                // Update badge in sidebar
+                const badge = document.querySelector('#nav-induk .badge-count');
+                if(badge) badge.innerText = total;
+            }
+            
+            renderAngkatanStats();
+            renderProfesiStats();
+        }
+
+        function renderAngkatanStats() {
+            const container = document.getElementById('angkatanGrid');
+            if(!container) return;
+            const counts = {};
+            
+            alumniData.forEach(a => { 
+                if(a.angkatan && a.angkatan !== '-') counts[a.angkatan] = (counts[a.angkatan] || 0) + 1; 
+            });
+            
+            const sortedAngkatan = Object.keys(counts).sort((a,b) => b - a); 
+            
+            if(sortedAngkatan.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 col-span-full">Belum ada pemetaan data angkatan.</p>';
+                return;
+            }
+            
+            container.innerHTML = sortedAngkatan.map(year => `
+                <div class="bg-slate-900/50 border border-slate-700/50 p-5 rounded-2xl text-center hover:border-blue-500/50 transition-colors cursor-pointer group shadow-md">
+                    <h4 class="text-3xl font-black text-white mb-1 group-hover:text-blue-400 transition-colors">${year}</h4>
+                    <p class="text-xs text-slate-400 font-semibold bg-slate-800/50 rounded-full py-1 mt-2">${counts[year]} Alumni</p>
+                </div>
+            `).join('');
+        }
+
+        function renderProfesiStats() {
+            const container = document.getElementById('profesiGrid');
+            if(!container) return;
+            const counts = {};
+            
+            alumniData.forEach(a => {
+                let job = (a.kerja && a.kerja.trim() !== '-' && a.kerja.trim() !== '') ? a.kerja : 'Belum Diklasifikasi';
+                counts[job] = (counts[job] || 0) + 1;
+            });
+            
+            const sortedJobs = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+            
+            if(sortedJobs.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 col-span-full">Belum ada pemetaan profesi.</p>';
+                return;
+            }
+
+            container.innerHTML = sortedJobs.map(job => `
+                <div class="bg-slate-900/50 border border-slate-700/50 p-5 rounded-2xl flex items-center justify-between hover:border-emerald-500/50 transition-colors group cursor-pointer shadow-md">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all shrink-0">
+                            <i class="ph-fill ph-briefcase text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-sm capitalize line-clamp-1">${job}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Bidang Profesi/Kiprah</p>
+                        </div>
+                    </div>
+                    <span class="text-xl font-black text-white ml-2">${counts[job]}</span>
+                </div>
+            `).join('');
+        }
+
+        // Jalankan fetch saat halaman dimuat
+        window.addEventListener('DOMContentLoaded', fetchAlumniData);
+
+    </script>
+</body>
+</html>
