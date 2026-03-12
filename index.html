@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>IKBAL Portal Pesantren - Lubabuth Tholibin</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#141E33', 900: '#0F172A', 950: '#020617' },
+                        pesantren: { 
+                            green: '#10b981', 
+                            gold: '#fbbf24', 
+                            dark: '#064e3b',
+                            accent: '#34d399'
+                        }
+                    },
+                    borderRadius: { '3xl': '24px', '4xl': '32px' }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            overscroll-behavior-y: contain;
+        }
+        .font-arabic { font-family: 'Amiri', serif; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        @keyframes splashOut {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.1); visibility: hidden; }
+        }
+        .splash-fade { animation: splashOut 0.8s forwards 1.2s ease-in-out; }
+        .bottom-nav {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(16, 185, 129, 0.1);
+        }
+        .page { display: none; animation: slideIn 0.3s ease-out; }
+        .page.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .ripple { position: relative; overflow: hidden; }
+        .ripple:active::after {
+            content: ""; position: absolute; top: 50%; left: 50%; width: 5px; height: 5px;
+            background: rgba(255, 255, 255, 0.4); opacity: 1; border-radius: 100%;
+            transform: scale(1, 1) translate(-50%); transform-origin: 50% 50%;
+            animation: rippleEffect 0.6s ease-out;
+        }
+        @keyframes rippleEffect { 0% { transform: scale(0, 0); opacity: 1; } 100% { transform: scale(40, 40); opacity: 0; } }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+        }
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: flex !important; }
+        .tab-btn.active { color: #10b981; border-bottom: 2px solid #10b981; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen overflow-hidden">
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash" class="fixed inset-0 z-[1000] bg-slate-950 flex flex-col items-center justify-center splash-fade pointer-events-none">
+        <div class="relative">
+            <div class="absolute inset-0 bg-pesantren-green blur-[60px] opacity-30 animate-pulse"></div>
+            <img src="https://i.postimg.cc/dtcCfxNM/2437-removebg-preview.png" alt="Logo" class="w-24 h-24 relative z-10 drop-shadow-2xl">
+        </div>
+        <h2 class="mt-6 text-2xl font-black text-white tracking-widest uppercase font-arabic italic">IKBAL Portal</h2>
+        <p class="text-[10px] text-pesantren-gold font-bold uppercase tracking-[0.3em] mt-2">PP. Lubabuth Tholibin</p>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div class="flex flex-col h-screen max-w-md mx-auto relative bg-slate-950 shadow-2xl">
+        
+        <!-- HEADER -->
+        <header class="px-6 pt-8 pb-4 sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-900">
+            <div class="flex flex-col items-center text-center relative">
+                <img src="https://i.postimg.cc/dtcCfxNM/2437-removebg-preview.png" alt="Logo" class="w-14 h-14 mb-3 drop-shadow-xl animate-pulse cursor-pointer" onclick="switchNav('beranda')">
+                <p id="app-subtitle" class="text-[12px] font-black uppercase tracking-[0.25em] bg-gradient-to-r from-pesantren-green via-emerald-400 to-pesantren-gold bg-clip-text text-transparent mb-1 drop-shadow-sm">
+                    👋 Halo Santri
+                </p>
+                <h1 id="app-title" class="text-xl font-extrabold text-white tracking-tight">Beranda Utama</h1>
+                
+                <div class="absolute right-0 bottom-2">
+                    <button onclick="toggleModal('adminModal', true)" class="w-10 h-10 rounded-2xl glass-panel flex items-center justify-center text-slate-400 ripple">
+                        <i class="ph-bold ph-shield-check text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main id="main-content" class="flex-1 overflow-y-auto px-6 pb-32 pt-2 space-y-6 no-scrollbar">
+            
+            <section id="page-beranda" class="page active space-y-6">
+                <!-- Banner Loker -->
+                <div id="loker-banner-container"></div>
+
+                <!-- Menu Cepat -->
+                <div class="grid grid-cols-4 gap-4">
+                    <button onclick="switchNav('warta')" class="flex flex-col items-center gap-2">
+                        <div class="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 ripple">
+                            <i class="ph-bold ph-newspaper text-2xl"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Warta</span>
+                    </button>
+                    <button onclick="switchNav('kajian')" class="flex flex-col items-center gap-2">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20 ripple">
+                            <i class="ph-bold ph-book-open-text text-2xl"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Kajian</span>
+                    </button>
+                    <button onclick="switchNav('donasi')" class="flex flex-col items-center gap-2">
+                        <div class="w-14 h-14 rounded-2xl bg-pesantren-gold/10 text-pesantren-gold flex items-center justify-center border border-pesantren-gold/20 ripple">
+                            <i class="ph-bold ph-hand-heart text-2xl"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Infaq</span>
+                    </button>
+                    <button onclick="switchNav('alumni')" class="flex flex-col items-center gap-2">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 ripple">
+                            <i class="ph-bold ph-users text-2xl"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Alumni</span>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1 h-4 bg-pesantren-green rounded-full"></span> Warta Utama
+                    </h4>
+                    <div id="hero-news" class="relative rounded-[32px] overflow-hidden group ripple cursor-pointer">
+                        <div class="h-48 bg-slate-800 flex items-center justify-center text-slate-600 text-xs italic">Memuat...</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-warta" class="page space-y-4">
+                <div id="news-list" class="space-y-6"></div>
+            </section>
+
+            <section id="page-kajian" class="page space-y-6">
+                <div class="bg-pesantren-dark/30 border border-pesantren-green/10 p-5 rounded-3xl space-y-4">
+                    <h4 class="text-pesantren-gold font-bold text-sm flex items-center gap-2 uppercase tracking-widest">
+                        <i class="ph ph-calendar-check"></i> Jadwal Kajian Rutin
+                    </h4>
+                    <div id="kajian-list" class="space-y-3"></div>
+                </div>
+            </section>
+
+            <section id="page-alumni" class="page space-y-4">
+                <div class="sticky top-0 bg-slate-950 pt-2 pb-4 z-10">
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" id="searchInput" oninput="window.filterAlumni()" placeholder="Cari nama atau angkatan..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-12 pr-4 py-3.5 text-sm text-white focus:outline-none focus:border-pesantren-green shadow-inner">
+                        </div>
+                        <button onclick="window.exportAlumniToCSV()" class="admin-only w-14 bg-slate-800 text-pesantren-green rounded-2xl items-center justify-center border border-slate-700 ripple shadow-lg" title="Unduh Data CSV">
+                            <i class="ph-bold ph-download-simple text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="alumni-list-mobile" class="space-y-3"></div>
+            </section>
+
+            <section id="page-donasi" class="page space-y-6">
+                <div class="admin-only flex justify-between border-b border-slate-800 pb-3 items-center">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-widest">Manajemen Infaq</h3>
+                    <button onclick="window.openBankSettings()" class="text-xs font-bold uppercase text-pesantren-gold flex items-center gap-1 ripple">
+                        <i class="ph-bold ph-gear"></i> Rekening
+                    </button>
+                </div>
+
+                <div class="glass-panel p-6 rounded-[32px] flex flex-col items-center justify-center relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-pesantren-green/20 blur-3xl rounded-full"></div>
+                    <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-pesantren-gold/10 blur-3xl rounded-full"></div>
+                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest relative z-10 mb-1">Total Infaq Terkumpul</p>
+                    <h2 id="total-infaq-display" class="text-3xl font-black text-white relative z-10 tracking-tight">Rp 0</h2>
+                    
+                    <div class="mt-4 inline-flex items-center gap-2 bg-pesantren-green/10 border border-pesantren-green/20 px-4 py-1.5 rounded-full relative z-10">
+                        <i class="ph-fill ph-check-circle text-pesantren-green"></i>
+                        <span class="text-[9px] text-pesantren-green font-bold uppercase tracking-widest">Amanah & Transparan</span>
+                    </div>
+                </div>
+
+                <button onclick="window.openUserDonasi('umum', 'Infaq Umum Pesantren')" class="w-full py-4 bg-pesantren-green text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider ripple shadow-xl shadow-pesantren-green/20 flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-hand-heart text-xl"></i> Konfirmasi Infaq
+                </button>
+
+                <div class="admin-only flex-col space-y-4 pt-4 border-t border-slate-800/50">
+                    <h4 class="text-xs font-bold text-pesantren-gold uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-clock"></i> Antrean Verifikasi</h4>
+                    <div id="donation-pending-list" class="flex-col space-y-3"></div>
+                </div>
+
+                <div class="flex-col space-y-4 pt-2">
+                    <h4 class="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-users-three"></i> Donatur Terbaru</h4>
+                    <div id="donation-verified-list" class="flex-col space-y-3"></div>
+                </div>
+            </section>
+        </main>
+
+        <button id="fab-add" onclick="handleFabAction()" class="hidden fixed bottom-28 right-6 w-16 h-16 rounded-3xl bg-pesantren-green text-slate-950 shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-50 ripple">
+            <i class="ph-bold ph-plus text-2xl"></i>
+        </button>
+
+        <nav class="fixed bottom-0 left-0 right-0 bottom-nav z-50 safe-area-bottom">
+            <div class="flex items-center justify-around py-3 px-2 max-w-md mx-auto">
+                <button onclick="switchNav('beranda')" id="nav-beranda" class="nav-btn group flex flex-col items-center gap-1 text-pesantren-green">
+                    <div class="px-4 py-1.5 rounded-2xl group-active:scale-90 transition-all bg-pesantren-green/20"><i class="ph-fill ph-house-simple text-xl"></i></div>
+                    <span class="text-[9px] font-bold uppercase tracking-widest">Home</span>
+                </button>
+                <button onclick="switchNav('warta')" id="nav-warta" class="nav-btn group flex flex-col items-center gap-1 text-slate-500">
+                    <div class="px-4 py-1.5 rounded-2xl group-active:scale-90 transition-all"><i class="ph-fill ph-newspaper text-xl"></i></div>
+                    <span class="text-[9px] font-bold uppercase tracking-widest">Warta</span>
+                </button>
+                <button onclick="switchNav('kajian')" id="nav-kajian" class="nav-btn group flex flex-col items-center gap-1 text-slate-500">
+                    <div class="px-4 py-1.5 rounded-2xl group-active:scale-90 transition-all"><i class="ph-fill ph-book-open-text text-xl"></i></div>
+                    <span class="text-[9px] font-bold uppercase tracking-widest">Kajian</span>
+                </button>
+                <button onclick="switchNav('donasi')" id="nav-donasi" class="nav-btn group flex flex-col items-center gap-1 text-slate-500">
+                    <div class="px-4 py-1.5 rounded-2xl group-active:scale-90 transition-all"><i class="ph-fill ph-hand-heart text-xl"></i></div>
+                    <span class="text-[9px] font-bold uppercase tracking-widest">Infaq</span>
+                </button>
+                <button onclick="switchNav('alumni')" id="nav-alumni" class="nav-btn group flex flex-col items-center gap-1 text-slate-500">
+                    <div class="px-4 py-1.5 rounded-2xl group-active:scale-90 transition-all"><i class="ph-fill ph-users text-xl"></i></div>
+                    <span class="text-[9px] font-bold uppercase tracking-widest">Alumni</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- MODALS -->
+    <div id="adminModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="toggleModal('adminModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-xs p-8 rounded-[40px] shadow-2xl border border-slate-800">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-pesantren-green/10 text-pesantren-green rounded-3xl flex items-center justify-center mx-auto mb-4"><i class="ph-bold ph-lock-key text-3xl"></i></div>
+                <h3 class="text-xl font-bold text-white">Akses Pengurus</h3>
+                <p class="text-xs text-slate-500 mt-1">Gunakan PIN Admin</p>
+            </div>
+            <div class="space-y-4">
+                <input type="password" id="adminPin" maxlength="6" placeholder="••••••" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-center text-3xl tracking-[0.5em] text-pesantren-green focus:outline-none">
+                <button onclick="handleLogin()" class="w-full bg-pesantren-green text-slate-950 font-black py-4 rounded-2xl uppercase text-xs ripple">Login</button>
+                <button onclick="logout()" id="btn-logout" class="hidden w-full border border-red-500/30 text-red-400 font-bold py-3 rounded-2xl uppercase text-[10px] ripple">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="newsDetailModal" class="fixed inset-0 z-[300] hidden flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-slate-950/95 backdrop-blur-md" onclick="toggleModal('newsDetailModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md max-h-[85vh] overflow-y-auto rounded-[40px] shadow-2xl border border-slate-800 no-scrollbar">
+            <img id="newsDetailImg" src="" class="w-full h-48 object-cover">
+            <div class="p-8 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span id="newsDetailCat" class="px-2 py-0.5 bg-pesantren-green text-slate-950 text-[8px] font-bold rounded-full uppercase"></span>
+                    <span id="newsDetailDate" class="text-[10px] text-slate-500 font-bold"></span>
+                </div>
+                <h3 id="newsDetailTitle" class="text-xl font-black text-white italic"></h3>
+                <div id="newsDetailContent" class="text-sm text-slate-400 leading-relaxed whitespace-pre-line"></div>
+                <div id="newsDetailActions" class="pt-4 mt-2 border-t border-slate-800/50">
+                    <button onclick="toggleModal('newsDetailModal', false)" class="w-full py-3 bg-slate-800 text-white rounded-2xl font-bold text-xs uppercase mt-4 ripple">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORM LOKER -->
+    <div id="lokerFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="toggleModal('lokerFormModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 id="lokerFormTitle" class="text-xl font-bold text-white mb-6">Tambah Lowongan Kerja</h3>
+            <form id="lokerForm" class="space-y-4">
+                <input type="hidden" id="lokerId">
+                <input type="text" id="lokerJudul" required placeholder="Posisi Pekerjaan" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="lokerInstansi" required placeholder="Nama Instansi" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="date" id="lokerTanggal" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="lokerGambar" placeholder="URL Brosur (Opsional)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <textarea id="lokerIsi" rows="4" required placeholder="Syarat & Detail..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white"></textarea>
+                <div class="space-y-2 mt-4">
+                    <button type="submit" class="w-full bg-blue-500 text-white font-black py-4 rounded-2xl ripple">Simpan Lowongan</button>
+                    <button type="button" id="btnHapusLoker" class="hidden w-full bg-red-500/10 text-red-500 border border-red-500/20 font-black py-4 rounded-2xl ripple flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-trash text-lg"></i> Hapus Lowongan Ini
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORM ALUMNI -->
+    <div id="alumniFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="toggleModal('alumniFormModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 id="alumniFormTitle" class="text-xl font-bold text-white mb-6">Data Alumni</h3>
+            <form id="alumniForm" class="space-y-4">
+                <input type="hidden" id="alumniId">
+                <input type="text" id="alumniNama" required placeholder="Nama Lengkap" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="number" id="alumniAngkatan" required placeholder="Tahun Lulus" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="alumniKontak" placeholder="WhatsApp (08xx)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="alumniAlamat" placeholder="Domisili" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="alumniStatus" placeholder="Pekerjaan" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <div class="space-y-2 mt-4">
+                    <button type="submit" class="w-full bg-pesantren-green text-slate-950 font-black py-4 rounded-2xl ripple">Simpan Data</button>
+                    <button type="button" id="btnHapusAlumni" class="hidden w-full bg-red-500/10 text-red-500 border border-red-500/20 font-black py-4 rounded-2xl ripple flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-trash text-lg"></i> Hapus Data Ini
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORM WARTA -->
+    <div id="wartaFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="toggleModal('wartaFormModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 id="wartaFormTitle" class="text-xl font-bold text-white mb-6">Warta Pesantren</h3>
+            <form id="wartaForm" class="space-y-4">
+                <input type="hidden" id="wartaId">
+                <input type="text" id="wartaJudul" required placeholder="Judul Berita" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                
+                <input type="text" id="wartaKategori" list="kategoriOptions" required placeholder="Kategori (Mis: Pengumuman)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <datalist id="kategoriOptions">
+                    <option value="Berita Utama"></option>
+                    <option value="Pengumuman"></option>
+                    <option value="Prestasi Santri"></option>
+                    <option value="Artikel Kajian"></option>
+                </datalist>
+
+                <input type="date" id="wartaTanggal" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white [color-scheme:dark]">
+                <input type="text" id="wartaGambar" required placeholder="URL Gambar (Wajib)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <textarea id="wartaIsi" rows="6" required placeholder="Tulis isi berita atau pengumuman di sini..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white"></textarea>
+                
+                <div class="space-y-2 mt-4">
+                    <button type="submit" class="w-full bg-blue-500 text-white font-black py-4 rounded-2xl ripple">Simpan Warta</button>
+                    <button type="button" id="btnHapusWarta" class="hidden w-full bg-red-500/10 text-red-500 border border-red-500/20 font-black py-4 rounded-2xl ripple flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-trash text-lg"></i> Hapus Warta Ini
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORM KAJIAN -->
+    <div id="kajianFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="toggleModal('kajianFormModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 id="kajianFormTitle" class="text-xl font-bold text-white mb-6">Jadwal Kajian</h3>
+            <form id="kajianForm" class="space-y-4">
+                <input type="hidden" id="kajianId">
+                <input type="text" id="kajianKitab" required placeholder="Nama Kitab" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="kajianGuru" required placeholder="Guru" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="time" id="kajianWaktu" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white focus:outline-none appearance-none [color-scheme:dark]">
+                <div class="space-y-2 mt-4">
+                    <button type="submit" class="w-full bg-purple-500 text-white font-black py-4 rounded-2xl ripple">Simpan</button>
+                    <button type="button" id="btnHapusKajian" class="hidden w-full bg-red-500/10 text-red-500 border border-red-500/20 font-black py-4 rounded-2xl ripple flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-trash text-lg"></i> Hapus Jadwal Ini
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="userDonasiModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="toggleModal('userDonasiModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-2">Konfirmasi Infaq</h3>
+            <p id="donasiTitleInfo" class="text-xs text-pesantren-green font-bold mb-6"></p>
+            <form id="userDonasiForm" class="space-y-4">
+                <input type="hidden" id="userDonasiCampaignId">
+                <input type="text" id="userDonasiNama" required placeholder="Nama Donatur (atau Hamba Allah)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="window.setNominal(50000)" class="py-2.5 bg-slate-800 text-slate-300 rounded-xl text-[10px] font-bold border border-slate-700 hover:bg-slate-700 ripple">50 Ribu</button>
+                    <button type="button" onclick="window.setNominal(100000)" class="py-2.5 bg-slate-800 text-slate-300 rounded-xl text-[10px] font-bold border border-slate-700 hover:bg-slate-700 ripple">100 Ribu</button>
+                    <button type="button" onclick="window.setNominal(500000)" class="py-2.5 bg-slate-800 text-slate-300 rounded-xl text-[10px] font-bold border border-slate-700 hover:bg-slate-700 ripple">500 Ribu</button>
+                </div>
+
+                <input type="number" id="userDonasiNominal" required placeholder="Nominal Lainnya (Rp)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <textarea id="userDonasiPesan" rows="2" placeholder="Pesan atau Doa (Opsional)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white"></textarea>
+
+                <div id="dynamicBankInfo" class="p-4 bg-slate-950 rounded-2xl text-[10px] text-slate-400 border border-slate-800 leading-relaxed"></div>
+                <button type="submit" class="w-full bg-pesantren-green text-slate-950 font-black py-4 rounded-2xl mt-2 ripple">Kirim Konfirmasi</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editKonfirmasiModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="toggleModal('editKonfirmasiModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-6">Edit Data Infaq</h3>
+            <form id="editKonfirmasiForm" class="space-y-4">
+                <input type="hidden" id="editKonfirmasiId">
+                <input type="text" id="editKonfirmasiNama" required placeholder="Nama Donatur" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="number" id="editKonfirmasiNominal" required placeholder="Nominal Rp" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <div class="space-y-2 mt-4">
+                    <button type="submit" class="w-full bg-blue-500 text-white font-black py-4 rounded-2xl ripple">Simpan Perubahan</button>
+                    <button type="button" id="btnHapusKonfirmasi" class="hidden w-full bg-red-500/10 text-red-500 border border-red-500/20 font-black py-4 rounded-2xl ripple flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-trash text-lg"></i> Hapus Data Ini
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="bankSettingsModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="toggleModal('bankSettingsModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-6">Pengaturan Rekening & WA</h3>
+            <form id="bankSettingsForm" class="space-y-4">
+                <input type="text" id="settingBankName" required placeholder="Nama Bank" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="settingBankAccount" required placeholder="Rekening" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="settingBankHolder" required placeholder="Atas Nama" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <input type="text" id="settingWaNumber" required placeholder="WA (62812...)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white">
+                <button type="submit" class="w-full bg-pesantren-gold text-slate-950 font-black py-4 rounded-2xl mt-2 ripple">Simpan</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-12 left-6 right-6 z-[400] transform -translate-y-32 transition-all duration-500 pointer-events-none">
+        <div class="bg-slate-900/90 backdrop-blur-md border border-pesantren-green/30 text-white px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
+            <div id="toast-icon-bg" class="w-8 h-8 rounded-full bg-pesantren-green flex items-center justify-center text-slate-950"><i class="ph-bold ph-check"></i></div>
+            <p id="toast-msg" class="text-xs font-bold"></p>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script type="module">
+        window.totalInfaq = 0; 
+        window.allConfirms = []; 
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlc5I-c0SFG8TCYhk_URuX431WJeLjIL8",
+            authDomain: "ikbal-34984.firebaseapp.com",
+            projectId: "ikbal-34984",
+            storageBucket: "ikbal-34984.firebasestorage.app",
+            messagingSenderId: "663947700436",
+            appId: "1:663947700436:web:43f8f9ce0613b2ca9d3341"
+        };
+        const appId = 'ikbal-34984'; 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let allAlumni = [], allNews = [], allSchedules = [];
+        let bankInfo = { bankName: 'BSI', bankAccount: '7123456789', bankHolder: 'IKBAL', waNumber: '6281234567890' };
+
+        const generateId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2);
+
+        signInAnonymously(auth);
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                initRealtime();
+            }
+        });
+
+        function initRealtime() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'alumni'), (snap) => {
+                allAlumni = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                window.renderAlumni(allAlumni);
+            });
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'news'), (snap) => {
+                allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                window.renderNews(allNews);
+                window.renderHeroNews(allNews);
+                window.renderLokerBanner(allNews);
+            });
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'schedules'), (snap) => {
+                allSchedules = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                window.renderSchedules(allSchedules);
+            });
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'konfirmasi_infaq'), (snap) => {
+                window.allConfirms = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                window.renderConfirms(window.allConfirms);
+            });
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'rekening', 'info'), (docSnap) => {
+                if (docSnap.exists()) bankInfo = docSnap.data();
+                window.updateBankDisplay(bankInfo);
+            });
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'rekening', 'total'), (docSnap) => {
+                if (docSnap.exists()) {
+                    window.totalInfaq = docSnap.data().total || 0;
+                } else {
+                    window.totalInfaq = 0;
+                }
+                if (typeof window.renderTotalInfaq === 'function') {
+                    window.renderTotalInfaq();
+                }
+            });
+        }
+
+        const checkAdminPrivilege = () => {
+            if (!document.body.classList.contains('is-admin')) {
+                window.showToast("Akses Ditolak! Anda bukan Admin.", "error");
+                return false;
+            }
+            return true;
+        };
+
+        window.saveAlumni = async (e) => { 
+            e.preventDefault(); if(!checkAdminPrivilege()) return; 
+            try { 
+                const id = document.getElementById('alumniId').value || generateId(); 
+                const inputAngkatan = parseInt(document.getElementById('alumniAngkatan').value);
+                const data = { 
+                    nama: document.getElementById('alumniNama').value, 
+                    angkatan: isNaN(inputAngkatan) ? new Date().getFullYear() : inputAngkatan, 
+                    kontak: document.getElementById('alumniKontak').value, 
+                    alamat: document.getElementById('alumniAlamat').value, 
+                    status: document.getElementById('alumniStatus').value, 
+                    updatedAt: new Date().toISOString() 
+                }; 
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', id), data); 
+                window.toggleModal('alumniFormModal', false); window.showToast("Data Disimpan"); 
+            } catch (err) { window.showToast("Gagal menyimpan data", "error"); } 
+        };
+        
+        window.saveNews = async (e) => { e.preventDefault(); if(!checkAdminPrivilege()) return; try { const id = document.getElementById('wartaId').value || generateId(); const data = { judul: document.getElementById('wartaJudul').value, kategori: document.getElementById('wartaKategori').value, tanggal: document.getElementById('wartaTanggal').value, gambar: document.getElementById('wartaGambar').value, isi: document.getElementById('wartaIsi').value, updatedAt: new Date().toISOString() }; await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'news', id), data); window.toggleModal('wartaFormModal', false); window.showToast("Warta Berhasil Disimpan"); } catch (err) { window.showToast("Gagal", "error"); } };
+        window.saveLoker = async (e) => { e.preventDefault(); if(!checkAdminPrivilege()) return; try { const id = document.getElementById('lokerId').value || generateId(); const data = { judul: `${document.getElementById('lokerJudul').value} di ${document.getElementById('lokerInstansi').value}`, kategori: 'Loker', tanggal: document.getElementById('lokerTanggal').value, gambar: document.getElementById('lokerGambar').value || "https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?auto=format&fit=crop&q=80&w=600", isi: document.getElementById('lokerIsi').value, updatedAt: new Date().toISOString() }; await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'news', id), data); window.toggleModal('lokerFormModal', false); window.showToast("Loker Disimpan"); } catch (err) { window.showToast("Gagal", "error"); } };
+        window.saveSchedule = async (e) => { e.preventDefault(); if(!checkAdminPrivilege()) return; try { const id = document.getElementById('kajianId').value || generateId(); const data = { kitab: document.getElementById('kajianKitab').value, guru: document.getElementById('kajianGuru').value, waktu: document.getElementById('kajianWaktu').value, updatedAt: new Date().toISOString() }; await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'schedules', id), data); window.toggleModal('kajianFormModal', false); window.showToast("Update Kajian Berhasil"); } catch (err) { window.showToast("Gagal", "error"); } };
+        window.saveBankSettings = async (e) => { e.preventDefault(); if(!checkAdminPrivilege()) return; try { const data = { bankName: document.getElementById('settingBankName').value, bankAccount: document.getElementById('settingBankAccount').value, bankHolder: document.getElementById('settingBankHolder').value, waNumber: document.getElementById('settingWaNumber').value, updatedAt: new Date().toISOString() }; await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rekening', 'info'), data); window.toggleModal('bankSettingsModal', false); window.showToast("Pengaturan Disimpan"); } catch (err) { window.showToast("Gagal", "error"); } };
+        
+        window.saveKonfirmasiAdmin = async (e) => { 
+            e.preventDefault(); if(!checkAdminPrivilege()) return; 
+            try { 
+                const id = document.getElementById('editKonfirmasiId').value; 
+                const conf = window.getStoreData().allConfirms.find(c => c.id === id); if(!conf) return; 
+                const inputNominal = parseInt(document.getElementById('editKonfirmasiNominal').value);
+                const data = { 
+                    ...conf, 
+                    nama: document.getElementById('editKonfirmasiNama').value, 
+                    nominal: isNaN(inputNominal) ? 0 : inputNominal, 
+                    updatedAt: new Date().toISOString() 
+                }; 
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'konfirmasi_infaq', id), data); 
+                window.toggleModal('editKonfirmasiModal', false); window.showToast("Data Infaq Diperbarui"); 
+            } catch (err) { window.showToast("Gagal", "error"); } 
+        };
+
+        window.setNominal = (amount) => {
+            document.getElementById('userDonasiNominal').value = amount;
+        };
+        
+        window.submitUserDonation = async (e) => { 
+            e.preventDefault(); 
+            try { 
+                const nama = document.getElementById('userDonasiNama').value; 
+                const inputNominal = parseInt(document.getElementById('userDonasiNominal').value); 
+                const nominal = isNaN(inputNominal) ? 0 : inputNominal;
+                const pesan = document.getElementById('userDonasiPesan').value;
+
+                const data = { 
+                    campaignId: document.getElementById('userDonasiCampaignId').value, 
+                    nama: nama, 
+                    nominal: nominal, 
+                    pesan: pesan,
+                    status: 'pending',
+                    tanggal: new Date().toISOString() 
+                }; 
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'konfirmasi_infaq'), data); 
+                window.toggleModal('userDonasiModal', false); window.showToast("Dialihkan ke WA..."); 
+                
+                let msg = `Assalamu'alaikum,%0A%0ASaya ingin konfirmasi infaq.%0ANama: *${nama}*%0ANominal: *Rp ${new Intl.NumberFormat('id-ID').format(nominal)}*`; 
+                if(pesan) msg += `%0ADoa/Pesan: _${pesan}_`;
+                msg += `%0A%0ABerikut saya lampirkan bukti transfernya.`;
+
+                setTimeout(() => window.open(`https://wa.me/${bankInfo.waNumber}?text=${msg}`, '_blank'), 1500); 
+            } catch (err) { window.showToast("Gagal mengirim", "error"); } 
+        };
+        
+        window.approveDonation = async (id) => { 
+            if(!checkAdminPrivilege()) return; 
+            if(!confirm("Verifikasi Infaq ini? Dana akan sah masuk ke Total Kas Pesantren.")) return; 
+            try { 
+                const conf = window.getStoreData().allConfirms.find(c => c.id === id);
+                if(!conf) return;
+
+                const currentTotal = window.totalInfaq || 0;
+                const newTotal = currentTotal + (conf.nominal || 0);
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rekening', 'total'), { total: newTotal, updatedAt: new Date().toISOString() }, { merge: true });
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'konfirmasi_infaq', id), { ...conf, status: 'verified', verifiedAt: new Date().toISOString() });
+
+                window.showToast("Infaq Disahkan!"); 
+            } catch (err) { window.showToast("Gagal memverifikasi", "error"); } 
+        };
+        
+        window.deleteItem = async (type, id) => { 
+            if(!checkAdminPrivilege()) return false; 
+            if(!confirm("Hapus data secara permanen?")) return false; 
+            
+            let colName = type;
+            if (type === 'kajian') colName = 'schedules';
+
+            try { 
+                if (colName === 'konfirmasi_infaq') {
+                    const conf = window.getStoreData().allConfirms.find(c => c.id === id);
+                    if (conf && conf.status === 'verified') {
+                        const currentTotal = window.totalInfaq || 0;
+                        const newTotal = Math.max(0, currentTotal - (conf.nominal || 0));
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rekening', 'total'), { total: newTotal, updatedAt: new Date().toISOString() }, { merge: true });
+                    }
+                }
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, id)); 
+                window.showToast("Data Dihapus"); 
+                return true;
+            } catch (err) { 
+                console.error(err);
+                window.showToast("Gagal menghapus", "error"); 
+                return false;
+            } 
+        };
+
+        window.getStoreData = () => ({ allAlumni, allNews, allSchedules, allConfirms: window.allConfirms || [], bankInfo });
+        
+        document.getElementById('alumniForm').addEventListener('submit', window.saveAlumni);
+        document.getElementById('wartaForm').addEventListener('submit', window.saveNews);
+        document.getElementById('lokerForm').addEventListener('submit', window.saveLoker);
+        document.getElementById('kajianForm').addEventListener('submit', window.saveSchedule);
+        document.getElementById('userDonasiForm').addEventListener('submit', window.submitUserDonation);
+        document.getElementById('bankSettingsForm').addEventListener('submit', window.saveBankSettings);
+        document.getElementById('editKonfirmasiForm').addEventListener('submit', window.saveKonfirmasiAdmin);
+    </script>
+
+    <script>
+        let activePage = 'beranda';
+        const PIN_ADMIN = "123456";
+        let toastTimeout;
+
+        function switchNav(id) {
+            activePage = id;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('text-pesantren-green');
+                b.classList.add('text-slate-500');
+                b.querySelector('div').classList.remove('bg-pesantren-green/20');
+            });
+            document.getElementById('page-' + id).classList.add('active');
+            const btn = document.getElementById('nav-' + id);
+            if(btn) {
+                btn.classList.add('text-pesantren-green');
+                btn.querySelector('div').classList.add('bg-pesantren-green/20');
+            }
+            const titles = { beranda:['Beranda Utama','👋 Halo Santri'], warta:['Warta','Info Terkini'], kajian:['Kajian','Majelis Ilmu'], donasi:['Infaq','Amal Jariyah'], alumni:['Alumni','Buku Induk'] };
+            document.getElementById('app-title').innerText = titles[id][0];
+            document.getElementById('app-subtitle').innerText = titles[id][1];
+            document.getElementById('main-content').scrollTop = 0;
+            const fab = document.getElementById('fab-add');
+            
+            if(document.body.classList.contains('is-admin') && id !== 'beranda' && id !== 'donasi') fab.classList.remove('hidden');
+            else fab.classList.add('hidden');
+        }
+
+        function toggleModal(id, show) { 
+            const m = document.getElementById(id);
+            if(show) m.classList.remove('hidden'); else m.classList.add('hidden');
+        }
+        window.toggleModal = toggleModal;
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            const bg = document.getElementById('toast-icon-bg');
+            if(type === 'error') {
+                bg.className = 'w-8 h-8 rounded-full flex items-center justify-center text-slate-950 bg-red-500';
+                bg.innerHTML = '<i class="ph-bold ph-x"></i>';
+            } else {
+                bg.className = 'w-8 h-8 rounded-full flex items-center justify-center text-slate-950 bg-pesantren-green';
+                bg.innerHTML = '<i class="ph-bold ph-check"></i>';
+            }
+            
+            t.classList.replace('-translate-y-32', 'translate-y-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { t.classList.replace('translate-y-0', '-translate-y-32'); }, 3000);
+        }
+        window.showToast = showToast;
+
+        const formatIDR = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v);
+
+        window.filterAlumni = () => {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const data = window.getStoreData().allAlumni;
+            const filtered = data.filter(a => 
+                (a.nama && a.nama.toLowerCase().includes(query)) || 
+                (a.angkatan && a.angkatan.toString().includes(query))
+            );
+            window.renderAlumni(filtered);
+        };
+
+        window.renderNews = (data) => {
+            const isAdmin = document.body.classList.contains('is-admin');
+            const container = document.getElementById('news-list');
+            const sorted = [...data].sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+            if(sorted.length === 0) { container.innerHTML = `<p class="py-20 text-center text-slate-600 italic">Belum ada warta.</p>`; return; }
+            container.innerHTML = sorted.map(n => `
+                <div class="glass-panel p-4 rounded-3xl space-y-3 ripple" onclick="window.openNewsDetail('${n.id}')">
+                    <div class="h-32 bg-slate-800 rounded-2xl overflow-hidden">
+                        <img src="${n.gambar}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=600';" class="w-full h-full object-cover transition-opacity duration-500">
+                    </div>
+                    <div><p class="text-[10px] font-bold text-pesantren-green">${n.tanggal} | ${n.kategori}</p><h5 class="text-white font-bold text-sm mt-1">${n.judul}</h5></div>
+                    ${isAdmin ? `<div class="flex gap-2 pt-2 border-t border-slate-800/30" onclick="event.stopPropagation()"><button onclick="event.stopPropagation(); window.editWarta('${n.id}')" class="text-[10px] text-blue-400 uppercase font-bold p-1">Edit</button><button onclick="event.stopPropagation(); window.deleteItem('news', '${n.id}')" class="text-[10px] text-red-400 uppercase font-bold p-1 ml-2">Hapus</button></div>` : ''}
+                </div>
+            `).join('');
+        };
+
+        window.renderHeroNews = (data) => {
+            const hero = document.getElementById('hero-news');
+            const n = [...data].sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal))[0];
+            if(!n) { hero.innerHTML = `<div class="h-48 bg-slate-800 flex items-center justify-center text-slate-500 text-xs">Kosong</div>`; return; }
+            hero.innerHTML = `
+                <div class="h-48 bg-slate-800">
+                    <img src="${n.gambar}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=600';" class="w-full h-full object-cover opacity-60">
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 flex flex-col justify-end p-5">
+                    <h5 class="text-white font-bold">${n.judul}</h5>
+                </div>`;
+            hero.onclick = () => window.openNewsDetail(n.id);
+        };
+
+        window.renderLokerBanner = (data) => {
+            const loker = data.filter(n => n.kategori?.toLowerCase().includes('loker')).sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal))[0];
+            const container = document.getElementById('loker-banner-container');
+            const isAdmin = document.body.classList.contains('is-admin');
+            if(loker) {
+                container.innerHTML = `<div class="glass-panel p-5 rounded-[32px] border-l-4 border-blue-500 shadow-xl relative"><div class="flex justify-between items-start cursor-pointer" onclick="window.openNewsDetail('${loker.id}')"><div class="flex-1 pr-4"><h4 class="text-xs font-bold text-blue-400 uppercase">Lowongan Kerja</h4><p class="text-lg font-black text-white leading-tight mt-1 line-clamp-2">${loker.judul}</p></div><i class="ph-fill ph-briefcase text-2xl text-blue-400 shrink-0"></i></div>${isAdmin ? `<div class="flex gap-2 pt-4 mt-4 border-t border-slate-800/50"><button onclick="event.stopPropagation(); window.editLoker('${loker.id}')" class="flex-1 py-2 bg-blue-500/10 rounded-xl text-[10px] text-blue-400 font-bold uppercase ripple">Edit</button><button onclick="event.stopPropagation(); window.addLoker()" class="flex-1 py-2 bg-pesantren-green/10 rounded-xl text-[10px] text-pesantren-green font-bold uppercase ripple">Baru</button><button onclick="event.stopPropagation(); window.deleteItem('news', '${loker.id}')" class="flex-1 py-2 bg-red-500/10 rounded-xl text-[10px] text-red-400 font-bold uppercase ripple">Hapus</button></div>` : ''}</div>`;
+            } else {
+                container.innerHTML = `<div class="glass-panel p-5 rounded-[32px] border-l-4 border-slate-700 shadow-xl"><div class="flex justify-between items-start"><div class="flex-1 pr-4"><h4 class="text-xs font-bold text-slate-500 uppercase">Lowongan Kerja</h4><p class="text-lg font-black text-slate-400 mt-1 leading-tight">Belum ada info loker baru.</p></div><i class="ph-fill ph-briefcase text-2xl text-slate-600 shrink-0"></i></div>${isAdmin ? `<button onclick="window.addLoker()" class="w-full mt-4 py-3 bg-blue-500/10 rounded-xl text-[10px] text-blue-400 font-bold uppercase ripple">Tambah Loker Baru</button>` : ''}</div>`;
+            }
+        };
+
+        window.renderAlumni = (data) => {
+            const container = document.getElementById('alumni-list-mobile');
+            const isAdmin = document.body.classList.contains('is-admin');
+            const sorted = [...data].sort((a,b) => b.angkatan - a.angkatan);
+            if(sorted.length === 0) { container.innerHTML = `<p class="py-20 text-center text-slate-600 italic">Data kosong atau tidak ditemukan.</p>`; return; }
+            
+            container.innerHTML = sorted.map(a => {
+                let waBtnHtml = '';
+                if(a.kontak) {
+                    let sanitizedPhone = a.kontak.replace(/\D/g, ''); 
+                    if(sanitizedPhone.startsWith('0')) sanitizedPhone = '62' + sanitizedPhone.substring(1);
+                    waBtnHtml = `<a href="https://wa.me/${sanitizedPhone}" target="_blank" class="p-3 bg-pesantren-green/10 text-pesantren-green rounded-2xl ripple"><i class="ph-bold ph-whatsapp-logo text-xl"></i></a>`;
+                } else {
+                    waBtnHtml = `<div class="p-3 bg-slate-800/50 text-slate-600 rounded-2xl cursor-not-allowed"><i class="ph-bold ph-whatsapp-logo text-xl"></i></div>`;
+                }
+
+                return `<div class="glass-panel p-5 rounded-[32px] flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-950 flex flex-col items-center justify-center border border-slate-800">
+                                <span class="text-[8px] font-black text-pesantren-gold uppercase">Liting</span>
+                                <span class="text-sm font-black text-white">${a.angkatan}</span>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-bold text-white">${a.nama}</h5>
+                                <p class="text-[10px] text-slate-500">${a.alamat || '-'}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            ${isAdmin ? `<button onclick="window.editAlumni('${a.id}')" class="p-2 text-blue-400 ripple"><i class="ph-bold ph-pencil"></i></button><button onclick="window.deleteItem('alumni', '${a.id}')" class="p-2 text-red-400 ripple"><i class="ph-bold ph-trash"></i></button>` : waBtnHtml}
+                        </div>
+                    </div>
+                    ${a.status ? `<div class="pt-3 border-t border-slate-800/50 text-[10px] text-slate-400"><span class="font-bold text-slate-500 uppercase">Status:</span> ${a.status}</div>` : ''}
+                </div>`;
+            }).join('');
+        };
+
+        window.renderTotalInfaq = () => {
+            const display = document.getElementById('total-infaq-display');
+            if(display) display.innerText = formatIDR(window.totalInfaq);
+        };
+
+        window.renderConfirms = (data) => {
+            const isAdmin = document.body.classList.contains('is-admin');
+            const pendingContainer = document.getElementById('donation-pending-list');
+            const verifiedContainer = document.getElementById('donation-verified-list');
+            
+            if(!pendingContainer || !verifiedContainer) return;
+
+            const pending = data.filter(c => c.status === 'pending').sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+            const verified = data.filter(c => c.status === 'verified').sort((a,b) => new Date(b.verifiedAt || b.tanggal) - new Date(a.verifiedAt || a.tanggal));
+
+            if(pending.length === 0) { 
+                pendingContainer.innerHTML = `<p class="py-4 text-center text-slate-500 italic text-[10px]">Tidak ada antrean.</p>`; 
+            } else {
+                pendingContainer.innerHTML = pending.map(c => `
+                <div class="glass-panel p-4 rounded-3xl flex justify-between items-start gap-2 border border-pesantren-gold/30">
+                    <div class="flex-1 pr-2">
+                        <p class="text-sm font-bold text-white leading-tight">${c.nama}</p>
+                        <p class="text-[11px] text-pesantren-green font-bold mt-1">${formatIDR(c.nominal)}</p>
+                        ${c.pesan ? `<p class="text-[9px] text-slate-400 mt-1 italic leading-relaxed">"${c.pesan}"</p>` : ''}
+                        <p class="text-[8px] text-slate-500 mt-2">${new Date(c.tanggal).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour:'2-digit', minute:'2-digit'})}</p>
+                    </div>
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <div class="flex gap-2">
+                            <button onclick="window.editKonfirmasi('${c.id}')" class="p-2 bg-blue-500/10 text-blue-400 rounded-xl ripple"><i class="ph-bold ph-pencil-simple"></i></button>
+                            <button onclick="window.deleteItem('konfirmasi_infaq', '${c.id}')" class="p-2 bg-red-500/10 text-red-500 rounded-xl ripple"><i class="ph-bold ph-trash"></i></button>
+                        </div>
+                        <button onclick="window.approveDonation('${c.id}')" class="px-3 py-2 bg-pesantren-green text-slate-950 rounded-xl text-[9px] font-bold uppercase tracking-wider ripple flex items-center justify-center gap-1"><i class="ph-bold ph-check"></i> Terima</button>
+                    </div>
+                </div>`).join('');
+            }
+
+            if(verified.length === 0) {
+                verifiedContainer.innerHTML = `<p class="py-6 text-center text-slate-500 italic text-[10px]">Belum ada riwayat donatur.</p>`;
+            } else {
+                verifiedContainer.innerHTML = verified.map(c => `
+                <div class="p-4 bg-slate-900/50 rounded-3xl flex items-center justify-between border border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
+                            <i class="ph-fill ph-user text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white">${c.nama}</p>
+                            <p class="text-[9px] text-slate-500 mt-0.5">${new Date(c.verifiedAt || c.tanggal).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[11px] font-black text-pesantren-green">${formatIDR(c.nominal)}</p>
+                        ${isAdmin ? `<button onclick="window.deleteItem('konfirmasi_infaq', '${c.id}')" class="text-[8px] text-red-500 mt-1 uppercase font-bold hover:underline">Hapus Data</button>` : ''}
+                    </div>
+                </div>`).join('');
+            }
+        };
+
+        window.renderSchedules = (data) => {
+            const container = document.getElementById('kajian-list');
+            const isAdmin = document.body.classList.contains('is-admin');
+            if(data.length === 0) { container.innerHTML = `<p class="py-10 text-center text-slate-600 italic text-xs">Jadwal kosong.</p>`; return; }
+            
+            const sorted = [...data].sort((a,b) => {
+                if(!a.waktu) return 1;
+                if(!b.waktu) return -1;
+                return a.waktu.localeCompare(b.waktu);
+            });
+
+            container.innerHTML = sorted.map(k => `<div class="p-4 glass-panel rounded-2xl"><div class="flex justify-between items-center"><div><p class="text-sm font-bold text-white">${k.kitab}</p><p class="text-[10px] text-pesantren-green">${k.guru}</p></div><span class="text-xs font-bold text-pesantren-gold">${k.waktu}</span></div>${isAdmin ? `<div class="flex gap-4 pt-2 mt-2 border-t border-slate-800/30"><button onclick="window.editKajian('${k.id}')" class="text-[9px] font-bold text-blue-400 uppercase p-1 ripple">Edit</button><button onclick="window.deleteItem('kajian', '${k.id}')" class="text-[9px] font-bold text-red-400 uppercase p-1 ripple">Hapus</button></div>` : ''}</div>`).join('');
+        };
+
+        window.updateBankDisplay = (info) => { document.getElementById('dynamicBankInfo').innerHTML = `Transfer ke: <b class="text-white">${info.bankName} ${info.bankAccount}</b><br>a.n ${info.bankHolder}`; };
+
+        window.openNewsDetail = (id) => {
+            const n = window.getStoreData().allNews.find(x => x.id === id);
+            if(!n) return;
+            document.getElementById('newsDetailImg').src = n.gambar;
+            document.getElementById('newsDetailImg').onerror = function() { this.src='https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=600'; };
+            document.getElementById('newsDetailCat').innerText = n.kategori || '';
+            document.getElementById('newsDetailDate').innerText = n.tanggal || '';
+            document.getElementById('newsDetailTitle').innerText = n.judul || '';
+            document.getElementById('newsDetailContent').innerText = n.isi || '';
+            
+            const actions = document.getElementById('newsDetailActions');
+            const isAdmin = document.body.classList.contains('is-admin');
+            
+            const btnHapus = isAdmin ? `<button onclick="event.stopPropagation(); window.deleteItem('news', '${n.id}').then(success => { if(success) window.toggleModal('newsDetailModal', false); });" class="w-full py-3 mb-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl font-bold uppercase flex items-center justify-center gap-2 ripple"><i class="ph-bold ph-trash text-lg"></i> Hapus Konten Ini</button>` : '';
+
+            if(n.kategori?.toLowerCase().includes('loker')) {
+                actions.innerHTML = `${btnHapus}<button onclick="window.hubungiWALoker('${n.id}')" class="w-full py-3 bg-pesantren-green text-slate-950 rounded-2xl font-bold uppercase flex items-center justify-center gap-2 mb-3 ripple"><i class="ph-bold ph-whatsapp-logo text-lg"></i> Lamar via WA</button><button onclick="window.toggleModal('newsDetailModal', false)" class="w-full py-3 bg-slate-800 text-white rounded-2xl font-bold uppercase ripple">Tutup</button>`;
+            } else {
+                actions.innerHTML = `${btnHapus}<button onclick="window.toggleModal('newsDetailModal', false)" class="w-full py-3 bg-slate-800 text-white rounded-2xl font-bold uppercase ripple">Tutup</button>`;
+            }
+            window.toggleModal('newsDetailModal', true);
+        };
+
+        window.hubungiWALoker = (id) => {
+            const n = window.getStoreData().allNews.find(x => x.id === id);
+            const msg = `Assalamu'alaikum,%0A%0ASaya ingin melamar posisi: *${n.judul}*%0AMohon arahannya. Terima kasih.`;
+            window.showToast("Mengalihkan ke WA...");
+            setTimeout(() => window.open(`https://wa.me/${window.getStoreData().bankInfo.waNumber}?text=${msg}`, '_blank'), 1000);
+        };
+
+        window.openUserDonasi = (id, title) => { 
+            document.getElementById('userDonasiForm').reset();
+            document.getElementById('userDonasiCampaignId').value = id; 
+            document.getElementById('userDonasiPesan').value = '';
+            document.getElementById('donasiTitleInfo').innerText = title; 
+            window.updateBankDisplay(window.getStoreData().bankInfo); 
+            window.toggleModal('userDonasiModal', true); 
+        };
+        
+        window.openBankSettings = () => { 
+            const i = window.getStoreData().bankInfo; 
+            document.getElementById('settingBankName').value = i.bankName || ''; 
+            document.getElementById('settingBankAccount').value = i.bankAccount || ''; 
+            document.getElementById('settingBankHolder').value = i.bankHolder || ''; 
+            document.getElementById('settingWaNumber').value = i.waNumber || ''; 
+            window.toggleModal('bankSettingsModal', true); 
+        };
+
+        window.editKonfirmasi = (id) => { 
+            const c = window.getStoreData().allConfirms.find(x => x.id === id); 
+            if(!c) return; 
+            document.getElementById('editKonfirmasiId').value = c.id; 
+            document.getElementById('editKonfirmasiNama').value = c.nama || ''; 
+            document.getElementById('editKonfirmasiNominal').value = c.nominal || ''; 
+            
+            const btnHapus = document.getElementById('btnHapusKonfirmasi');
+            if (btnHapus) {
+                btnHapus.classList.remove('hidden');
+                btnHapus.onclick = async () => {
+                    const success = await window.deleteItem('konfirmasi_infaq', c.id);
+                    if (success) window.toggleModal('editKonfirmasiModal', false);
+                };
+            }
+            window.toggleModal('editKonfirmasiModal', true); 
+        };
+
+        window.editAlumni = (id) => { 
+            const a = window.getStoreData().allAlumni.find(x => x.id === id); 
+            if(!a) return; 
+            document.getElementById('alumniId').value = a.id; 
+            document.getElementById('alumniNama').value = a.nama || ''; 
+            document.getElementById('alumniAngkatan').value = a.angkatan || ''; 
+            document.getElementById('alumniKontak').value = a.kontak || ''; 
+            document.getElementById('alumniAlamat').value = a.alamat || ''; 
+            document.getElementById('alumniStatus').value = a.status || ''; 
+
+            const btnHapus = document.getElementById('btnHapusAlumni');
+            if (btnHapus) {
+                btnHapus.classList.remove('hidden');
+                btnHapus.onclick = async () => {
+                    const success = await window.deleteItem('alumni', a.id);
+                    if (success) window.toggleModal('alumniFormModal', false);
+                };
+            }
+            window.toggleModal('alumniFormModal', true); 
+        };
+        
+        window.editWarta = (id) => { 
+            const n = window.getStoreData().allNews.find(x => x.id === id); 
+            if(!n) return; 
+            document.getElementById('wartaId').value = n.id; 
+            document.getElementById('wartaJudul').value = n.judul || ''; 
+            document.getElementById('wartaKategori').value = n.kategori || ''; 
+            document.getElementById('wartaTanggal').value = n.tanggal || ''; 
+            document.getElementById('wartaGambar').value = n.gambar || ''; 
+            document.getElementById('wartaIsi').value = n.isi || ''; 
+
+            const btnHapus = document.getElementById('btnHapusWarta');
+            if (btnHapus) {
+                btnHapus.classList.remove('hidden');
+                btnHapus.onclick = async () => {
+                    const success = await window.deleteItem('news', n.id);
+                    if (success) window.toggleModal('wartaFormModal', false);
+                };
+            }
+            window.toggleModal('wartaFormModal', true); 
+        };
+        
+        window.editLoker = (id) => { 
+            const n = window.getStoreData().allNews.find(x => x.id === id); 
+            if(!n) return; 
+            document.getElementById('lokerId').value = n.id; 
+            let posisi = n.judul || ''; let instansi = ''; 
+            if(posisi.includes(' di ')) { const parts = posisi.split(' di '); posisi = parts[0]; instansi = parts.slice(1).join(' di '); }
+            document.getElementById('lokerJudul').value = posisi; 
+            document.getElementById('lokerInstansi').value = instansi; 
+            document.getElementById('lokerTanggal').value = n.tanggal || ''; 
+            document.getElementById('lokerGambar').value = n.gambar || ''; 
+            document.getElementById('lokerIsi').value = n.isi || ''; 
+
+            const btnHapus = document.getElementById('btnHapusLoker');
+            if (btnHapus) {
+                btnHapus.classList.remove('hidden');
+                btnHapus.onclick = async () => {
+                    const success = await window.deleteItem('news', n.id);
+                    if (success) window.toggleModal('lokerFormModal', false);
+                };
+            }
+            window.toggleModal('lokerFormModal', true); 
+        };
+        
+        window.editKajian = (id) => {
+            const k = window.getStoreData().allSchedules.find(x => x.id === id); 
+            if(!k) return;
+            document.getElementById('kajianId').value = k.id;
+            document.getElementById('kajianKitab').value = k.kitab || '';
+            document.getElementById('kajianGuru').value = k.guru || '';
+            document.getElementById('kajianWaktu').value = k.waktu || '';
+            
+            const btnHapus = document.getElementById('btnHapusKajian');
+            if (btnHapus) {
+                btnHapus.classList.remove('hidden');
+                btnHapus.onclick = async () => {
+                    const success = await window.deleteItem('kajian', k.id);
+                    if (success) window.toggleModal('kajianFormModal', false);
+                };
+            }
+            window.toggleModal('kajianFormModal', true);
+        };
+
+        window.addLoker = () => { 
+            document.getElementById('lokerForm').reset(); 
+            document.getElementById('lokerId').value = ""; 
+            const btnHapus = document.getElementById('btnHapusLoker');
+            if(btnHapus) btnHapus.classList.add('hidden');
+            window.toggleModal('lokerFormModal', true); 
+        };
+
+        function handleFabAction() {
+            if(activePage === 'alumni') { 
+                document.getElementById('alumniForm').reset(); 
+                document.getElementById('alumniId').value = ""; 
+                const btnHapus = document.getElementById('btnHapusAlumni');
+                if(btnHapus) btnHapus.classList.add('hidden');
+                window.toggleModal('alumniFormModal', true); 
+            }
+            else if(activePage === 'warta') { 
+                document.getElementById('wartaForm').reset(); 
+                document.getElementById('wartaId').value = ""; 
+                const btnHapus = document.getElementById('btnHapusWarta');
+                if(btnHapus) btnHapus.classList.add('hidden');
+                window.toggleModal('wartaFormModal', true); 
+            }
+            else if(activePage === 'kajian') { 
+                document.getElementById('kajianForm').reset(); 
+                document.getElementById('kajianId').value = ""; 
+                const btnHapus = document.getElementById('btnHapusKajian');
+                if(btnHapus) btnHapus.classList.add('hidden');
+                window.toggleModal('kajianFormModal', true); 
+            }
+        }
+
+        function handleLogin() {
+            if(document.getElementById('adminPin').value === PIN_ADMIN) {
+                document.body.classList.add('is-admin');
+                document.getElementById('btn-logout').classList.remove('hidden');
+                document.getElementById('adminPin').classList.add('hidden');
+                window.toggleModal('adminModal', false);
+                switchNav(activePage);
+                
+                // PERBAIKAN: Me-render ulang semua data agar tombol Edit/Hapus Admin langsung muncul seketika!
+                const store = window.getStoreData();
+                window.renderConfirms(store.allConfirms);
+                window.renderSchedules(store.allSchedules);
+                window.renderNews(store.allNews);
+                window.renderLokerBanner(store.allNews);
+                window.renderAlumni(store.allAlumni);
+                
+                window.showToast("Berhasil Login Admin");
+            } else window.showToast("PIN Salah", "error");
+        }
+        
+        function logout() { 
+            document.body.classList.remove('is-admin'); 
+            document.getElementById('btn-logout').classList.add('hidden'); 
+            document.getElementById('adminPin').classList.remove('hidden'); 
+            document.getElementById('adminPin').value = "";
+            window.toggleModal('adminModal', false); 
+            switchNav(activePage); 
+            
+            // PERBAIKAN: Menyembunyikan ulang semua tombol Edit/Hapus secara instan
+            const store = window.getStoreData();
+            window.renderConfirms(store.allConfirms);
+            window.renderSchedules(store.allSchedules);
+            window.renderNews(store.allNews);
+            window.renderLokerBanner(store.allNews);
+            window.renderAlumni(store.allAlumni);
+            
+            window.showToast("Logout Berhasil");
+        }
+
+        window.exportAlumniToCSV = () => {
+            const data = window.getStoreData().allAlumni;
+            if(data.length === 0) return window.showToast("Tidak ada data", "error");
+            let csvContent = "data:text/csv;charset=utf-8,Nama Lengkap,Angkatan,Kontak / WhatsApp,Domisili,Status / Pekerjaan\n";
+            data.forEach(row => {
+                csvContent += `"${(row.nama||'').replace(/"/g,'""')}","${row.angkatan||''}","${(row.kontak||'').replace(/"/g,'""')}","${(row.alamat||'').replace(/"/g,'""')}","${(row.status||'').replace(/"/g,'""')}"\n`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", `Data_Alumni_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.showToast("Mengunduh...");
+        };
+    </script>
+</body>
+</html>
