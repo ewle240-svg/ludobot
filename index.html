@@ -286,12 +286,18 @@
                 const res = await fetch(SCRIPT_URL + "?action=getData");
                 const data = await res.json();
                 
-                // Pastikan setiap data memiliki ID agar tidak error saat edit/hapus
-                const fixId = (list) => (list || []).map(i => { if(!i.id) i.id = generateId(); return i; });
+                // PEMBERSIHAN DATA: Hanya membersihkan undefined.
+                // ID dan Tanggal sekarang disinkronkan secara permanen dari Backend (code.gs)
+                const cleanData = (list) => (list || []).map(i => { 
+                    Object.keys(i).forEach(key => {
+                        if(i[key] === "undefined" || i[key] === null) i[key] = "";
+                    });
+                    return i; 
+                });
                 
-                allAlumni = fixId(data.alumni);
-                allLoker = fixId(data.loker);
-                allSchedules = fixId(data.schedules);
+                allAlumni = cleanData(data.alumni);
+                allLoker = cleanData(data.loker);
+                allSchedules = cleanData(data.schedules);
                 allConfirms = data.konfirmasi || [];
                 totalInfaq = Number(data.totalInfaq) || 0;
                 if(data.bankInfo && data.bankInfo.waNumber) bankInfo = data.bankInfo;
@@ -342,7 +348,14 @@
                 let actionBtn = '';
                 
                 if (isAdmin) {
-                    actionBtn = `<button onclick="window.editAlumni('${a.id}')" class="w-full py-2.5 mt-2 bg-blue-500/10 text-blue-400 rounded-xl ripple border border-blue-500/20 shadow-sm text-[11px] font-bold uppercase tracking-wider"><i class="ph-bold ph-pencil mr-1 text-sm align-middle"></i> Edit Data Santri</button>`;
+                    actionBtn = `
+                    <div class="mt-1 pt-3 border-t border-slate-800/60">
+                        <div class="flex justify-between items-center mb-2 px-1">
+                            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">ID: ${a.id}</span>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Upd: ${a.updatedAt}</span>
+                        </div>
+                        <button onclick="window.editAlumni('${a.id}')" class="w-full py-2.5 bg-blue-500/10 text-blue-400 rounded-xl ripple border border-blue-500/20 shadow-sm text-[11px] font-bold uppercase tracking-wider"><i class="ph-bold ph-pencil mr-1 text-sm align-middle"></i> Edit Data Santri</button>
+                    </div>`;
                 } else if (a.kontak) {
                     actionBtn = `<a href="https://wa.me/${(a.kontak||'').replace(/\D/g,'').replace(/^0/,'62')}" target="_blank" class="w-full flex items-center justify-center py-2.5 mt-2 bg-pesantren-green/10 text-pesantren-green rounded-xl ripple border border-pesantren-green/20 shadow-sm text-[11px] font-bold uppercase tracking-wider"><i class="ph-bold ph-whatsapp-logo mr-1 text-sm align-middle"></i> Hubungi WA</a>`;
                 }
