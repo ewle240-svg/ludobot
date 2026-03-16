@@ -8,691 +8,818 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: { extend: { colors: { pesantren: { green: '#10b981', gold: '#fbbf24', dark: '#064e3b' } } } }
+            theme: { 
+                extend: { 
+                    colors: { 
+                        pesantren: { green: '#10b981', gold: '#f59e0b', blue: '#3b82f6', rose: '#f43f5e', dark: '#0f172a' } 
+                    },
+                    borderRadius: { '4xl': '2rem', '5xl': '2.5rem' }
+                } 
+            }
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .glass-panel { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(16px); }
-        
-        /* Fix Admin Visibility Bug */
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: inline-flex !important; }
-        body.is-admin button.admin-only, body.is-admin div.admin-only { display: flex !important; }
-        
+        .page.active { display: block; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .ripple:active { transform: scale(0.96); }
-        input, select, textarea { color-scheme: dark; }
-        .hero-img { object-fit: cover; width: 100%; height: 100%; transition: transform 0.7s ease; }
-        .hero-container:hover .hero-img { transform: scale(1.08); }
+        .tap-scale:active { transform: scale(0.95); transition: 0.1s; }
+        .admin-btn { display: none !important; }
+        body.is-admin .admin-btn { display: flex !important; }
+        .admin-only-item { display: none !important; }
+        body.is-admin .admin-only-item { display: block !important; }
+        #loading-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; transition: opacity 0.5s ease; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 min-h-screen">
+<body class="bg-pesantren-dark text-slate-200">
 
-    <div class="flex flex-col h-screen max-w-md mx-auto relative bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-900">
+    <div id="loading-overlay">
+        <div class="w-12 h-12 border-4 border-pesantren-green border-t-transparent rounded-full animate-spin"></div>
+        <p id="loading-text" class="text-[10px] font-black uppercase tracking-widest text-slate-500">Menghubungkan Database...</p>
+    </div>
+
+    <div class="flex flex-col h-screen max-w-md mx-auto relative shadow-2xl overflow-hidden bg-pesantren-dark border-x border-white/5">
         
         <!-- HEADER -->
-        <header class="px-6 pt-8 pb-4 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 z-40">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <img src="https://i.postimg.cc/dtcCfxNM/2437-removebg-preview.png" alt="Logo" class="w-10 h-10 ripple cursor-pointer" onclick="switchNav('beranda')">
-                    <div class="text-left">
-                        <p id="app-subtitle" class="text-[10px] font-black uppercase tracking-[0.2em] text-pesantren-green">PP. Lubabuth Tholibin</p>
-                        <h1 id="app-title" class="text-base font-extrabold text-white leading-tight">Beranda</h1>
-                    </div>
+        <header class="px-6 py-6 flex justify-between items-center z-50 shrink-0">
+            <div class="flex items-center gap-3">
+                <button id="btn-back" onclick="switchNav('beranda')" class="hidden w-10 h-10 rounded-2xl glass flex items-center justify-center text-white tap-scale mr-1">
+                    <i class="ph-bold ph-arrow-left"></i>
+                </button>
+                <div id="header-logo" class="w-10 h-10 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center">
+                    <img src="https://i.postimg.cc/dtcCfxNM/2437-removebg-preview.png" class="w-6 h-6" onerror="this.src='https://placehold.co/40x40/0f172a/white?text=IK'">
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="switchNav('admin')" class="admin-only w-10 h-10 rounded-2xl glass-panel flex items-center justify-center text-pesantren-gold ripple border-pesantren-gold/20">
-                        <i class="ph-bold ph-gear-six text-lg"></i>
-                    </button>
-                    <button id="btn-login-trigger" onclick="toggleModal('adminModal', true)" class="w-10 h-10 rounded-2xl glass-panel flex items-center justify-center text-slate-400 ripple">
-                        <i class="ph-bold ph-shield-check text-lg"></i>
-                    </button>
-                    <button id="btn-logout-trigger" onclick="logout()" class="hidden w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 ripple">
-                        <i class="ph-bold ph-sign-out text-lg"></i>
-                    </button>
+                <div class="text-left text-white">
+                    <p class="text-[8px] font-black text-pesantren-green uppercase tracking-[0.25em] leading-none mb-1">PP. Lubabuth Tholibin</p>
+                    <h1 id="app-title" class="text-base font-extrabold tracking-tight leading-none uppercase">IKBAL</h1>
                 </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="btn-login-trigger" onclick="toggleModal('adminModal', true)" class="w-10 h-10 rounded-2xl glass flex items-center justify-center text-slate-400 tap-scale">
+                    <i class="ph-bold ph-shield-check text-xl"></i>
+                </button>
+                <button id="btn-logout-trigger" onclick="logout()" class="hidden w-10 h-10 rounded-2xl bg-pesantren-rose/20 text-pesantren-rose border border-pesantren-rose/20 flex items-center justify-center tap-scale">
+                    <i class="ph-bold ph-sign-out text-xl"></i>
+                </button>
             </div>
         </header>
 
         <!-- MAIN CONTENT -->
-        <main id="main-content" class="flex-1 overflow-y-auto px-6 pb-32 pt-4 space-y-6 no-scrollbar">
+        <main class="flex-1 overflow-y-auto px-6 pb-24 no-scrollbar">
             
-            <!-- PAGE: BERANDA -->
-            <section id="page-beranda" class="page active space-y-6">
-                <div id="hero-container" class="hero-container relative group overflow-hidden rounded-[2.5rem] border border-slate-800 shadow-2xl">
-                    <div class="h-52 w-full bg-slate-900 relative">
-                        <img id="display-hero-img" 
-                             src="https://images.unsplash.com/photo-1590076215667-875d45353163?q=80&w=1000" 
-                             alt="Banner Home" 
-                             class="hero-img opacity-60"
-                             onerror="this.src='https://images.unsplash.com/photo-1590076215667-875d45353163?q=80&w=1000'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+            <section id="page-beranda" class="page active space-y-6 text-left">
+                <div class="relative overflow-hidden rounded-5xl p-8 bg-gradient-to-br from-pesantren-green/20 to-pesantren-dark border border-pesantren-green/20">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-pesantren-green/10 rounded-full blur-3xl"></div>
+                    <h2 id="home-title" class="text-2xl font-black text-white leading-tight tracking-tight">Ahlan wa Sahlan,<br>Keluarga IKBAL</h2>
+                    <p id="home-desc" class="text-[10px] text-emerald-400 font-bold uppercase mt-2 tracking-widest leading-relaxed">Portal Alumni Terintegrasi</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-slate-900/50 p-4 rounded-3xl border border-white/5 text-center">
+                        <p id="pub-stat-alumni" class="text-lg font-black text-emerald-400">0</p>
+                        <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Alumni</p>
                     </div>
-                    <div class="absolute bottom-0 left-0 p-7 w-full text-left">
-                        <h2 id="display-hero-title" class="text-xl font-black text-white leading-tight mb-2">Portal Alumni Terintegrasi</h2>
-                        <p id="display-hero-desc" class="text-xs text-slate-400 leading-relaxed italic line-clamp-2">Wadah silaturahmi, informasi karir, dan transparansi keuangan alumni.</p>
+                    <div class="bg-slate-900/50 p-4 rounded-3xl border border-white/5 text-center">
+                        <p id="pub-stat-loker" class="text-lg font-black text-blue-400">0</p>
+                        <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Loker</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-3xl border border-white/5 text-center">
+                        <p id="pub-stat-saldo" class="text-[9px] font-black text-amber-400 truncate">Rp 0</p>
+                        <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Dana Kas</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 text-center">
-                    <button onclick="switchNav('loker')" class="flex flex-col items-center gap-2 group">
-                        <div class="w-16 h-16 rounded-[2rem] bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 ripple group-hover:bg-blue-500/20 transition-all">
-                            <i class="ph-bold ph-briefcase text-2xl"></i>
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Menu Utama</p>
+                    <button onclick="switchNav('alumni')" class="w-full p-5 bg-slate-900 rounded-3xl flex items-center justify-between border border-white/5 tap-scale">
+                        <div class="flex items-center gap-4 text-left">
+                            <div class="w-10 h-10 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400"><i class="ph-duotone ph-users-three text-xl"></i></div>
+                            <div>
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider">Database Alumni</h4>
+                                <p class="text-[8px] text-slate-500 font-bold uppercase">Cari rekan alumni</p>
+                            </div>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Loker</span>
+                        <i class="ph ph-caret-right text-slate-800"></i>
                     </button>
-                    <button onclick="switchNav('donasi')" class="flex flex-col items-center gap-2 group">
-                        <div class="w-16 h-16 rounded-[2rem] bg-pesantren-gold/10 text-pesantren-gold flex items-center justify-center border border-pesantren-gold/20 ripple group-hover:bg-pesantren-gold/20 transition-all">
-                            <i class="ph-bold ph-bank text-2xl"></i>
+                    <button onclick="switchNav('loker')" class="w-full p-5 bg-slate-900 rounded-3xl flex items-center justify-between border border-white/5 tap-scale">
+                        <div class="flex items-center gap-4 text-left">
+                            <div class="w-10 h-10 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400"><i class="ph-duotone ph-briefcase text-xl"></i></div>
+                            <div>
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider">Lowongan Kerja</h4>
+                                <p class="text-[8px] text-slate-500 font-bold uppercase">Info karir terbaru</p>
+                            </div>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Saldo</span>
+                        <i class="ph ph-caret-right text-slate-800"></i>
                     </button>
-                    <button onclick="switchNav('alumni')" class="flex flex-col items-center gap-2 group">
-                        <div class="w-16 h-16 rounded-[2rem] bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 ripple group-hover:bg-emerald-500/20 transition-all">
-                            <i class="ph-bold ph-users-three text-2xl"></i>
+                    <button onclick="switchNav('donasi')" class="w-full p-5 bg-slate-900 rounded-3xl flex items-center justify-between border border-white/5 tap-scale">
+                        <div class="flex items-center gap-4 text-left">
+                            <div class="w-10 h-10 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-400"><i class="ph-duotone ph-hand-heart text-xl"></i></div>
+                            <div>
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider">Laporan Keuangan</h4>
+                                <p class="text-[8px] text-slate-500 font-bold uppercase">Transparansi kas IKBAL</p>
+                            </div>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Alumni</span>
+                        <i class="ph ph-caret-right text-slate-800"></i>
                     </button>
-                </div>
-
-                <div class="glass-panel p-5 rounded-[2.5rem] border-pesantren-green/20 relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 w-20 h-20 bg-pesantren-green/5 blur-2xl rounded-full"></div>
-                    <div class="flex items-center gap-3 mb-3 relative z-10 text-left">
-                        <div class="w-8 h-8 rounded-full bg-pesantren-green/20 flex items-center justify-center text-pesantren-green"><i class="ph-bold ph-megaphone"></i></div>
-                        <h4 class="text-xs font-black uppercase text-white tracking-widest">Warta Ikbal</h4>
-                    </div>
-                    <p class="text-[11px] text-slate-400 leading-relaxed relative z-10 italic text-left">"Sebaik-baik manusia adalah yang paling bermanfaat bagi orang lain." Pastikan data alumni Anda selalu diperbarui di menu Direktori.</p>
+                    
+                    <button onclick="switchNav('admin')" class="admin-only-item w-full p-5 bg-indigo-900/20 rounded-3xl flex items-center justify-between border border-indigo-500/20 tap-scale mt-4 shadow-lg">
+                        <div class="flex items-center gap-4 text-left">
+                            <div class="w-10 h-10 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-300"><i class="ph-duotone ph-shield-check text-xl"></i></div>
+                            <div>
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider">Admin Hub</h4>
+                                <p class="text-[8px] text-indigo-400 font-bold uppercase">Kelola seluruh sistem</p>
+                            </div>
+                        </div>
+                        <i class="ph ph-caret-right text-indigo-500"></i>
+                    </button>
                 </div>
             </section>
 
-            <!-- PAGE: SALDO ALUMNI -->
-            <section id="page-donasi" class="page space-y-6">
-                <!-- Dashboard Saldo -->
-                <div class="glass-panel p-8 rounded-[40px] relative overflow-hidden border-pesantren-gold/30 shadow-2xl text-center">
-                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-pesantren-gold/10 blur-3xl rounded-full"></div>
-                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3 relative z-10">Saldo Kas Alumni Aktif</p>
-                    <h2 id="total-infaq-display" class="text-4xl font-black text-white relative z-10 tracking-tighter mb-6">Rp 0</h2>
-                    
-                    <div class="relative h-2 w-full bg-slate-800 rounded-full overflow-hidden mb-6">
-                        <div id="pemasukan-bar" class="absolute left-0 top-0 h-full bg-pesantren-green transition-all duration-1000" style="width: 0%"></div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 relative z-10 font-black">
-                        <div class="bg-emerald-500/5 p-3 rounded-2xl border border-emerald-500/10 text-left">
-                            <p class="text-[8px] text-emerald-500 uppercase tracking-widest mb-1 text-center md:text-left">Pemasukan</p>
-                            <p id="total-masuk-display" class="text-xs text-white text-center md:text-left">Rp 0</p>
-                        </div>
-                        <div class="bg-red-500/5 p-3 rounded-2xl border border-red-500/10 text-right">
-                            <p class="text-[8px] text-red-500 uppercase tracking-widest mb-1 text-center md:text-right">Pengeluaran</p>
-                            <p id="total-keluar-display" class="text-xs text-white text-center md:text-right">Rp 0</p>
-                        </div>
-                    </div>
+            <section id="page-alumni" class="page space-y-4">
+                <div class="sticky top-0 bg-pesantren-dark/80 backdrop-blur-md pt-2 pb-4 z-10 flex gap-2">
+                    <input type="text" id="searchInput" oninput="renderAlumni()" placeholder="Cari nama atau domisili..." class="flex-1 bg-slate-900 border border-white/5 rounded-3xl px-6 py-5 text-sm text-white focus:ring-2 focus:ring-pesantren-green outline-none">
+                    <button onclick="openExportModal()" class="admin-btn w-14 bg-emerald-500/10 text-emerald-500 rounded-3xl items-center justify-center border border-emerald-500/20 tap-scale">
+                        <i class="ph-bold ph-download-simple text-xl"></i>
+                    </button>
                 </div>
+                <div id="alumni-list" class="space-y-3"></div>
+            </section>
 
-                <!-- INFO PENYALURAN -->
-                <div class="glass-panel p-6 rounded-[2.5rem] border-blue-500/20 space-y-4 text-left">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                            <i class="ph-bold ph-info text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-black uppercase text-white tracking-widest leading-none">Informasi Rekening</h4>
-                            <p class="text-[9px] text-slate-500 uppercase mt-1 tracking-tighter">Guna keperluan iuran & donasi</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/60 p-4 rounded-2xl border border-white/5 relative group">
-                        <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Rekening Resmi IKBAL</p>
-                        <p id="display-bank-info" class="text-sm font-bold text-blue-400 break-words leading-relaxed tracking-tight uppercase">Memuat data...</p>
-                        <button onclick="copyToClipboard(document.getElementById('display-bank-info').innerText)" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-blue-500/10 text-blue-400 rounded-lg ripple">
-                            <i class="ph ph-copy"></i>
-                        </button>
-                    </div>
-                    <a id="btn-wa-admin" href="#" target="_blank" class="flex items-center justify-between bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 ripple transition-all active:scale-95">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950"><i class="ph-bold ph-whatsapp-logo text-xl"></i></div>
-                            <div class="text-left">
-                                <p class="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Konfirmasi Transfer</p>
-                                <p class="text-xs font-bold text-white uppercase tracking-tight">Kirim Bukti ke Admin</p>
-                            </div>
-                        </div>
-                        <i class="ph ph-arrow-square-out text-emerald-500"></i>
+            <section id="page-loker" class="page space-y-4 text-left">
+                <div id="loker-list" class="space-y-4"></div>
+            </section>
+
+            <section id="page-donasi" class="page space-y-6">
+                <div class="bg-slate-900 p-8 rounded-5xl text-center border border-white/5 shadow-2xl relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-pesantren-gold/10 to-transparent pointer-events-none"></div>
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3">Total Kas Aktif</p>
+                    <h2 id="total-saldo-display" class="text-4xl font-black text-white tracking-tighter mb-4">Rp 0</h2>
+                </div>
+                
+                <div class="bg-slate-900/50 p-6 rounded-4xl space-y-4 border border-white/5 text-left">
+                    <p id="display-bank-info" class="text-xs font-bold text-white uppercase leading-relaxed">Memuat...</p>
+                    <a id="btn-wa-admin" href="#" target="_blank" class="w-full flex items-center justify-between bg-emerald-600 p-5 rounded-3xl text-emerald-950 tap-scale">
+                        <span class="text-xs font-black uppercase tracking-widest">Konfirmasi via WA</span>
+                        <i class="ph-bold ph-whatsapp-logo text-2xl"></i>
                     </a>
                 </div>
 
-                <div class="admin-only">
-                    <button onclick="toggleModal('adminSaldoModal', true)" class="w-full py-4 bg-pesantren-gold text-slate-950 font-black rounded-2xl uppercase text-[11px] ripple shadow-lg flex items-center justify-center gap-2 tracking-widest">
-                        <i class="ph-bold ph-plus-circle text-lg"></i> Update Buku Kas
-                    </button>
-                </div>
-                
-                <div class="space-y-4 pb-20">
-                    <div class="flex items-center justify-between px-2">
-                        <h4 class="text-[11px] font-black uppercase text-slate-400 tracking-[0.2em]">Riwayat Transaksi</h4>
-                        <i class="ph ph-receipt text-slate-600"></i>
-                    </div>
-                    <div id="donation-verified-list" class="space-y-3"></div>
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2 text-left">Riwayat Transaksi</p>
+                    <div id="transaction-list" class="space-y-3"></div>
                 </div>
             </section>
 
-            <!-- PAGE: ALUMNI -->
-            <section id="page-alumni" class="page space-y-4">
-                <div class="sticky top-0 bg-slate-950/80 backdrop-blur-md pt-2 pb-4 z-10 space-y-3 border-b border-slate-900">
-                    <div class="relative">
-                        <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-pesantren-green"></i>
-                        <input type="text" id="searchInput" oninput="window.filterAlumni()" placeholder="Cari nama alumni..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-sm text-white focus:outline-none focus:border-pesantren-green shadow-inner">
+            <section id="page-admin" class="page space-y-6 text-left">
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-slate-900 p-4 rounded-3xl border border-white/5">
+                        <p id="stat-alumni" class="text-lg font-black text-emerald-400">0</p>
+                        <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Alumni</p>
                     </div>
-                    <div class="flex gap-2">
-                        <select id="filterGender" onchange="window.filterAlumni()" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-[10px] font-bold uppercase text-slate-400 outline-none">
-                            <option value="">Gender</option>
-                            <option value="Laki-laki">Putra</option>
-                            <option value="Perempuan">Putri</option>
-                        </select>
-                        <select id="filterAlamat" onchange="window.filterAlumni()" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-[10px] font-bold uppercase text-slate-400 outline-none">
-                            <option value="">Semua Desa</option>
-                        </select>
-                        <button onclick="window.exportAlumniToCSV()" class="admin-only w-11 h-11 bg-slate-800 text-pesantren-green rounded-xl flex items-center justify-center border border-slate-700 ripple"><i class="ph-bold ph-file-xls text-xl"></i></button>
+                    <div class="bg-slate-900 p-4 rounded-3xl border border-white/5">
+                        <p id="stat-loker" class="text-lg font-black text-blue-400">0</p>
+                        <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Loker</p>
                     </div>
-                </div>
-                <div id="alumni-list-mobile" class="grid grid-cols-1 gap-3 pb-20"></div>
-            </section>
-
-            <!-- PAGE: LOKER -->
-            <section id="page-loker" class="page space-y-4">
-                <div id="loker-list" class="space-y-4 pb-20 text-left"></div>
-            </section>
-
-            <!-- PAGE: ADMIN CENTER -->
-            <section id="page-admin" class="page space-y-6">
-                <div class="grid grid-cols-2 gap-4 text-left">
-                    <div class="glass-panel p-5 rounded-3xl border-indigo-500/20">
-                        <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Total Alumni</p>
-                        <h4 id="admin-stat-alumni" class="text-xl font-black text-white">0</h4>
-                    </div>
-                    <div class="glass-panel p-5 rounded-3xl border-emerald-500/20">
-                        <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Total Transaksi</p>
-                        <h4 id="admin-stat-trans" class="text-xl font-black text-white">0</h4>
+                    <div class="bg-slate-900 p-4 rounded-3xl border border-white/5">
+                        <p id="stat-saldo" class="text-[10px] font-black text-amber-400 truncate">Rp 0</p>
+                        <p class="text-[7px] font-black text-slate-500 uppercase tracking-widest">Kas</p>
                     </div>
                 </div>
 
-                <div class="space-y-3 pb-20 text-left">
-                    <h5 class="text-[10px] font-black uppercase text-slate-500 tracking-widest px-2">Konfigurasi Konten</h5>
-                    <button onclick="window.openEditHome()" class="w-full p-4 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between ripple">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center"><i class="ph-bold ph-layout"></i></div>
-                            <div>
-                                <p class="text-xs font-bold text-white uppercase">Tampilan Beranda</p>
-                                <p class="text-[9px] text-slate-500 uppercase tracking-widest">Banner & Header</p>
-                            </div>
-                        </div>
-                        <i class="ph ph-caret-right text-slate-600"></i>
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Manajemen Konten</p>
+                    <button onclick="openAlumniForm()" class="w-full p-5 bg-emerald-900/20 rounded-3xl flex items-center justify-between border border-emerald-500/10 tap-scale">
+                        <div class="flex items-center gap-4 text-left"><i class="ph ph-user-plus text-xl text-emerald-400"></i><span class="text-xs font-black text-white uppercase tracking-wider">Tambah Alumni</span></div>
+                        <i class="ph ph-plus text-emerald-500"></i>
                     </button>
-                    <button onclick="toggleModal('appSettingsModal', true)" class="w-full p-4 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between ripple text-emerald-400">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center"><i class="ph-bold ph-briefcase"></i></div>
-                            <div>
-                                <p class="text-xs font-bold uppercase">Kontak & Rekening</p>
-                                <p class="text-[9px] opacity-60 font-bold tracking-widest uppercase">Info Pembayaran</p>
-                            </div>
-                        </div>
-                        <i class="ph ph-caret-right text-slate-600"></i>
+                    <button onclick="openLokerForm()" class="w-full p-5 bg-blue-900/20 rounded-3xl flex items-center justify-between border border-blue-500/10 tap-scale">
+                        <div class="flex items-center gap-4 text-left"><i class="ph ph-briefcase text-xl text-blue-400"></i><span class="text-xs font-black text-white uppercase tracking-wider">Tambah Loker</span></div>
+                        <i class="ph ph-plus text-blue-500"></i>
                     </button>
+                    <button onclick="openSaldoForm()" class="w-full p-5 bg-amber-900/20 rounded-3xl flex items-center justify-between border border-amber-500/10 tap-scale">
+                        <div class="flex items-center gap-4 text-left"><i class="ph ph-currency-circle-dollar text-xl text-amber-400"></i><span class="text-xs font-black text-white uppercase tracking-wider">Input Kas</span></div>
+                        <i class="ph ph-plus text-amber-500"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Pengaturan</p>
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <button onclick="toggleModal('homeSettingsModal', true)" class="p-5 bg-slate-900 rounded-3xl border border-white/5 tap-scale"><i class="ph ph-house-line text-xl text-emerald-400 mb-2"></i><p class="text-[9px] font-black text-white uppercase tracking-widest">Teks Beranda</p></button>
+                        <button onclick="toggleModal('appSettingsModal', true)" class="p-5 bg-slate-900 rounded-3xl border border-white/5 tap-scale"><i class="ph ph-bank text-xl text-amber-400 mb-2"></i><p class="text-[9px] font-black text-white uppercase tracking-widest">Kontak & Bank</p></button>
+                    </div>
                 </div>
             </section>
         </main>
 
-        <!-- FAB -->
-        <button id="fab-add" onclick="handleFabAction()" class="hidden fixed bottom-28 right-6 w-16 h-16 rounded-[24px] bg-pesantren-green text-slate-950 shadow-2xl flex items-center justify-center z-50 ripple">
-            <i class="ph-bold ph-plus text-2xl"></i>
+        <button id="fab-add" onclick="handleFabAction()" class="hidden fixed bottom-10 right-6 w-16 h-16 rounded-[1.8rem] bg-pesantren-green text-pesantren-dark shadow-2xl flex items-center justify-center z-50 tap-scale">
+            <i class="ph-bold ph-plus text-3xl"></i>
         </button>
-
-        <!-- BOTTOM NAV -->
-        <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-xl border-t border-slate-900 z-50">
-            <div class="flex items-center justify-around py-4 max-w-md mx-auto">
-                <button onclick="switchNav('beranda')" class="nav-btn text-pesantren-green flex flex-col items-center gap-1" id="nav-beranda"><i class="ph-fill ph-house-simple text-xl"></i><span class="text-[9px] font-bold uppercase tracking-widest">Home</span></button>
-                <button onclick="switchNav('loker')" class="nav-btn text-slate-500 flex flex-col items-center gap-1" id="nav-loker"><i class="ph-fill ph-briefcase text-xl"></i><span class="text-[9px] font-bold uppercase tracking-widest">Loker</span></button>
-                <button onclick="switchNav('donasi')" class="nav-btn text-slate-500 flex flex-col items-center gap-1" id="nav-donasi"><i class="ph-fill ph-hand-heart text-xl"></i><span class="text-[9px] font-bold uppercase tracking-widest">Saldo</span></button>
-                <button onclick="switchNav('alumni')" class="nav-btn text-slate-500 flex flex-col items-center gap-1" id="nav-alumni"><i class="ph-fill ph-users text-xl"></i><span class="text-[9px] font-bold uppercase tracking-widest">Alumni</span></button>
-            </div>
-        </nav>
     </div>
 
     <!-- MODALS -->
-
-    <!-- Loker Detail -->
-    <div id="lokerDetailModal" class="fixed inset-0 z-[300] hidden flex items-center justify-center p-6 bg-slate-950/95 backdrop-blur-md">
-        <div class="absolute inset-0" onclick="closeActiveModal()"></div>
-        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-[40px] border border-slate-800 shadow-2xl max-h-[85vh] overflow-y-auto text-left">
-            <h3 id="lokerDetailTitle" class="text-xl font-black text-white leading-tight mb-4 uppercase"></h3>
-            <div id="lokerDetailContent" class="text-sm text-slate-400 mb-8 whitespace-pre-line leading-relaxed italic border-l-2 border-blue-500 pl-4"></div>
-            <div id="lokerDetailActions" class="space-y-3"></div>
-            <button onclick="closeActiveModal()" class="w-full py-4 bg-slate-800 text-slate-300 rounded-2xl font-bold mt-4 uppercase text-[10px] tracking-widest">Tutup</button>
+    <div id="adminModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6 bg-pesantren-dark/95 backdrop-blur-md">
+        <div class="absolute inset-0" onclick="toggleModal('adminModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-xs p-10 rounded-5xl border border-white/5 text-center">
+            <h3 class="text-[10px] font-black text-slate-500 mb-8 uppercase tracking-[0.3em]">Akses Pengelola</h3>
+            <input type="password" id="adminPin" maxlength="6" placeholder="••••••" class="w-full bg-pesantren-dark border-none rounded-3xl py-6 text-center text-4xl text-pesantren-green mb-8 outline-none focus:ring-2 focus:ring-pesantren-green">
+            <button onclick="handleLogin()" class="w-full bg-pesantren-green text-pesantren-dark font-black py-5 rounded-3xl uppercase tap-scale shadow-lg">Masuk</button>
         </div>
     </div>
 
-    <!-- PIN Admin -->
-    <div id="adminModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6 bg-slate-950/95 backdrop-blur-sm">
-        <div class="absolute inset-0" onclick="closeActiveModal()"></div>
-        <div class="relative bg-slate-900 w-full max-w-xs p-10 rounded-[40px] border border-slate-800 shadow-2xl text-center">
-            <h3 class="text-xl font-bold text-white mb-6 uppercase tracking-widest">Akses Pengurus</h3>
-            <input type="password" id="adminPin" maxlength="6" placeholder="••••••" class="w-full bg-slate-950 border border-slate-800 rounded-2xl py-5 text-center text-4xl tracking-[0.5em] text-pesantren-green mb-6 outline-none focus:border-pesantren-green transition-all">
-            <button onclick="handleLogin()" class="w-full bg-pesantren-green text-slate-950 font-black py-4 rounded-2xl uppercase ripple shadow-lg">Verifikasi</button>
+    <div id="exportModal" class="fixed inset-0 z-[400] hidden flex items-end justify-center bg-pesantren-dark/90 backdrop-blur-sm">
+        <div class="absolute inset-0" onclick="toggleModal('exportModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-10 rounded-t-5xl border-t border-white/5 text-left">
+            <h3 class="text-xs font-black text-white mb-2 uppercase tracking-widest">Ekspor Alumni</h3>
+            <p id="export-count-preview" class="text-[10px] font-bold text-emerald-400 uppercase mb-6 tracking-widest">Terpilih: 0 Alumni</p>
+            <div class="space-y-4 mb-8">
+                <select id="exportGender" onchange="updateExportPreview()" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm outline-none ring-1 ring-white/10"><option value="Semua">Semua Kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select>
+                <select id="exportDomicile" onchange="updateExportPreview()" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm outline-none ring-1 ring-white/10"><option value="Semua">Semua Wilayah</option></select>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button onclick="downloadAlumniCSV()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-3xl uppercase tap-scale flex items-center justify-center gap-3"><i class="ph-bold ph-download-simple text-xl"></i> Unduh CSV</button>
+                <button onclick="toggleModal('exportModal', false)" class="w-full text-[10px] font-black text-slate-500 uppercase py-2 text-center">Batal</button>
+            </div>
         </div>
     </div>
 
-    <!-- App Settings -->
-    <div id="appSettingsModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-slate-950/80">
-        <div class="absolute inset-0" onclick="closeActiveModal()"></div>
-        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 text-left">
-            <h3 class="text-xl font-bold text-white mb-6 uppercase tracking-widest">Setting Pembayaran</h3>
-            <form id="appSettingsForm" class="space-y-4 pb-6">
-                <input type="text" id="setWaNumber" required placeholder="WhatsApp Admin (628...)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-sm">
-                <textarea id="setBankInfo" rows="2" required placeholder="Detail Rekening Bank..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-sm"></textarea>
-                <button type="submit" class="w-full bg-pesantren-green text-slate-950 font-black py-4 rounded-2xl uppercase ripple shadow-lg">Update Sistem</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Update Saldo -->
-    <div id="adminSaldoModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-slate-950/80">
-        <div class="absolute inset-0" onclick="closeActiveModal()"></div>
-        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 overflow-y-auto max-h-[85vh] text-left">
-            <h3 class="text-xl font-bold text-white mb-6">Posting Transaksi</h3>
-            <form id="adminSaldoForm" class="space-y-4 pb-4">
-                <div class="grid grid-cols-2 gap-3 mb-2">
-                    <label class="cursor-pointer">
-                        <input type="radio" name="saldoType" value="tambah" checked class="hidden peer">
-                        <div class="p-3 text-center rounded-2xl bg-slate-950 border border-slate-800 text-slate-500 peer-checked:bg-emerald-500/10 peer-checked:border-emerald-500 peer-checked:text-emerald-500 font-black text-[10px] uppercase transition-all">Pemasukan</div>
-                    </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="saldoType" value="kurang" class="hidden peer">
-                        <div class="p-3 text-center rounded-2xl bg-slate-950 border border-slate-800 text-slate-500 peer-checked:bg-red-500/10 peer-checked:border-red-500 peer-checked:text-red-500 font-black text-[10px] uppercase transition-all">Pengeluaran</div>
-                    </label>
-                </div>
-                <select id="adminSaldoCategory" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-sm outline-none">
-                    <option value="Iuran Alumni">Iuran Wajib Alumni</option>
-                    <option value="Donasi Sukarela">Donasi Sukarela</option>
-                    <option value="Operasional Ikbal">Kebutuhan Operasional</option>
-                    <option value="Kegiatan Sosial">Kegiatan Sosial</option>
-                </select>
-                <input type="number" id="adminSaldoAmount" required placeholder="Nominal Rp" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-xl font-black">
-                <textarea id="adminSaldoKeterangan" rows="2" required placeholder="Tulis keterangan transaksi..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-sm"></textarea>
-                <button type="submit" class="w-full bg-pesantren-gold text-slate-950 font-black py-4 rounded-2xl uppercase ripple shadow-lg">Posting Cloud</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Home Edit -->
-    <div id="homeEditModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-slate-950/80">
-        <div class="absolute inset-0" onclick="closeActiveModal()"></div>
-        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 text-left">
-            <h3 class="text-xl font-bold text-white mb-6 uppercase">Ubah Visual Banner</h3>
-            <form id="homeEditForm" class="space-y-4 pb-6">
-                <input type="text" id="homePhotoUrl" required placeholder="URL Gambar Banner" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-xs outline-none">
-                <input type="text" id="homeTitle" required placeholder="Judul Portal Utama" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-sm outline-none">
-                <textarea id="homeDesc" rows="3" required placeholder="Deskripsi Singkat Portal..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white text-xs outline-none"></textarea>
-                <button type="submit" class="w-full bg-pesantren-green text-slate-950 font-black py-4 rounded-2xl uppercase shadow-lg">Terapkan Perubahan</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Alumni Form -->
-    <div id="alumniFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-slate-950/80">
-        <div class="absolute inset-0" onclick="closeActiveModal()"></div>
-        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 overflow-y-auto max-h-[90vh] text-left">
-            <h3 class="text-xl font-bold text-white mb-6 uppercase tracking-widest">Update Data Alumni</h3>
-            <form id="alumniForm" class="space-y-4 pb-6">
+    <div id="alumniFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-pesantren-dark/90 backdrop-blur-sm">
+        <div class="absolute inset-0" onclick="toggleModal('alumniFormModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-10 rounded-t-5xl border-t border-white/5 max-h-[90vh] overflow-y-auto no-scrollbar">
+            <h3 class="text-xs font-black text-white mb-6 uppercase tracking-widest text-left">Profil Alumni</h3>
+            <form id="alumniForm" class="space-y-4 text-left">
                 <input type="hidden" id="alumniId">
-                <input type="text" id="alumniNama" required placeholder="Nama Lengkap Alumni" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white">
-                <input type="text" id="alumniBin" placeholder="Bin / Binti" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white">
-                <select id="alumniKelamin" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white">
-                    <option value="Laki-laki">Laki-laki (Putra)</option>
-                    <option value="Perempuan">Perempuan (Putri)</option>
-                </select>
-                <input type="text" id="alumniAlamat" required placeholder="Desa Asal" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white">
-                <input type="text" id="alumniKontak" placeholder="WhatsApp (Mulai dengan 62...)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white">
-                <button type="submit" class="w-full bg-pesantren-green text-slate-950 font-black py-4 rounded-2xl uppercase ripple mt-2 shadow-lg">Simpan Database</button>
-                <button type="button" id="btnHapusAlumni" onclick="window.deleteItem('alumni', document.getElementById('alumniId').value)" class="hidden w-full bg-red-500/10 text-red-500 py-3 rounded-2xl font-bold mt-2">Hapus Santri</button>
+                <input type="text" id="alumniNama" required placeholder="Nama Lengkap" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="alumniAngkatan" required placeholder="Tahun Angkatan" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                    <select id="alumniGender" required class="w-full bg-pesantren-dark rounded-2xl px-4 text-white text-sm"><option value="" disabled selected>Gender</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select>
+                </div>
+                <input type="text" id="alumniDomisili" required placeholder="Domisili (Kab/Kota)" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <input type="text" id="alumniPekerjaan" placeholder="Pekerjaan / Instansi" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-emerald-600 text-white font-black py-4 rounded-3xl uppercase tap-scale">Simpan</button>
+                    <button type="button" id="btn-delete-alumni" onclick="deleteData('Alumni', 'alumniId')" class="hidden w-16 bg-rose-600/20 text-rose-500 rounded-3xl flex items-center justify-center tap-scale"><i class="ph ph-trash"></i></button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- Loker Form -->
-    <div id="lokerFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-slate-950/80">
-        <div class="absolute inset-0" onclick="closeActiveModal()"></div>
-        <div class="relative bg-slate-900 w-full max-w-md p-8 rounded-t-[40px] border-t border-slate-800 text-left">
-            <h3 class="text-xl font-bold text-white mb-6 uppercase">Publikasikan Lowongan</h3>
-            <form id="lokerForm" class="space-y-4 pb-6">
+    <div id="lokerFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-pesantren-dark/90">
+        <div class="absolute inset-0" onclick="toggleModal('lokerFormModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-10 rounded-t-5xl border-t border-white/5">
+            <h3 class="text-xs font-black text-white mb-6 uppercase tracking-widest text-left">Post Lowongan</h3>
+            <form id="lokerForm" class="space-y-4 text-left">
                 <input type="hidden" id="lokerId">
-                <input type="text" id="lokerJudul" required placeholder="Judul Posisi / Pekerjaan" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white">
-                <input type="date" id="lokerTanggal" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white">
-                <textarea id="lokerIsi" rows="5" required placeholder="Persyaratan, Lokasi, Gaji, dan Cara Melamar..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-4 text-white"></textarea>
-                <button type="submit" class="w-full bg-blue-500 text-white font-black py-4 rounded-2xl uppercase ripple shadow-lg">Terbitkan</button>
-                <button type="button" id="btnHapusLoker" onclick="window.deleteItem('loker', document.getElementById('lokerId').value)" class="hidden w-full bg-red-500/10 text-red-500 py-3 rounded-2xl font-bold mt-2">Hapus</button>
+                <input type="text" id="lokerJudul" required placeholder="Judul Pekerjaan" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <input type="text" id="lokerInstansi" required placeholder="Nama Perusahaan" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <textarea id="lokerDesc" required placeholder="Kualifikasi & Deskripsi..." class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm" rows="4"></textarea>
+                <input type="text" id="lokerKontak" required placeholder="WA Admin Loker (62...)" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-3xl uppercase tap-scale">Simpan</button>
+                    <button type="button" id="btn-delete-loker" onclick="deleteData('Loker', 'lokerId')" class="hidden w-16 bg-rose-600/20 text-rose-500 rounded-3xl flex items-center justify-center tap-scale"><i class="ph ph-trash"></i></button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- TOAST -->
-    <div id="toast" class="fixed top-12 left-6 right-6 z-[1000] transform -translate-y-48 transition-all duration-500 pointer-events-none text-left">
-        <div id="toast-content" class="bg-slate-900 border border-pesantren-green/30 text-white px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
-            <div id="toast-icon-bg" class="w-8 h-8 rounded-full bg-pesantren-green flex items-center justify-center text-slate-950"><i class="ph-bold ph-check" id="toast-icon"></i></div>
-            <p id="toast-msg" class="text-xs font-bold leading-tight"></p>
+    <div id="saldoFormModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-pesantren-dark/90">
+        <div class="absolute inset-0" onclick="toggleModal('saldoFormModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-10 rounded-t-5xl border-t border-white/5">
+            <h3 id="saldoFormTitle" class="text-xs font-black text-white mb-6 uppercase tracking-widest text-left">Input Kas</h3>
+            <form id="saldoForm" class="space-y-4 text-left">
+                <input type="hidden" id="txId">
+                <div class="flex gap-2 p-1 bg-pesantren-dark rounded-2xl">
+                    <button type="button" onclick="setTxType('masuk')" id="tx-masuk-btn" class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase bg-emerald-500 text-emerald-950">Masuk</button>
+                    <button type="button" onclick="setTxType('keluar')" id="tx-keluar-btn" class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase text-slate-500">Keluar</button>
+                </div>
+                <input type="hidden" id="txType" value="masuk">
+                <input type="number" id="txNominal" required placeholder="Nominal Rp" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <input type="text" id="txKeterangan" required placeholder="Contoh: Infaq Bulanan" class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <input type="date" id="txTanggal" required class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm">
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-amber-600 text-white font-black py-4 rounded-3xl uppercase tap-scale">Catat</button>
+                    <button type="button" id="btn-delete-tx" onclick="deleteData('Saldo', 'txId')" class="hidden w-16 bg-rose-600/20 text-rose-500 rounded-3xl flex items-center justify-center tap-scale"><i class="ph ph-trash"></i></button>
+                </div>
+            </form>
         </div>
     </div>
 
+    <div id="homeSettingsModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-pesantren-dark/90">
+        <div class="absolute inset-0" onclick="toggleModal('homeSettingsModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-10 rounded-t-5xl border-t border-white/5 text-left">
+            <h3 class="text-xs font-black text-white mb-6 uppercase tracking-widest">Teks Beranda</h3>
+            <form id="homeForm" class="space-y-4 pb-10">
+                <input type="text" id="setHomeTitle" placeholder="Judul..." class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm mb-3">
+                <textarea id="setHomeDesc" placeholder="Deskripsi..." class="w-full bg-pesantren-dark rounded-2xl p-4 text-white text-sm mb-6" rows="3"></textarea>
+                <button type="submit" class="w-full bg-pesantren-green text-pesantren-dark font-black py-4 rounded-3xl uppercase tap-scale">Update</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="appSettingsModal" class="fixed inset-0 z-[300] hidden flex items-end justify-center bg-pesantren-dark/90">
+        <div class="absolute inset-0" onclick="toggleModal('appSettingsModal', false)"></div>
+        <div class="relative bg-slate-900 w-full max-w-md p-10 rounded-t-5xl border-t border-white/5 text-left">
+            <h3 class="text-xs font-black text-white mb-8 uppercase tracking-widest">Rekening & Kontak</h3>
+            <form id="settingsForm" class="space-y-4 pb-10">
+                <input type="text" id="setWA" placeholder="WA Admin (62...)" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm">
+                <textarea id="setBank" placeholder="Detail Bank (Nama & No Rek)" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm" rows="3"></textarea>
+                <button type="submit" class="w-full bg-purple-600 text-white font-black py-4 rounded-3xl uppercase tap-scale">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT UTAMA (TANPA JSON HEADER/BODY) -->
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8KJ8xzkBClhqRf2rDbTy2bhag8FL-gB3UzwOJbQVkP_FHipukAgqybvUb9UoIPzjd/exec";
-        const PIN_ADMIN = "123456";
-        let allAlumni = [], activePage = 'beranda', toastTimeout;
-        let allLoker = [], allConfirms = [];
-        let totalSaldo = 0, bankInfo = { waNumber: '6281234567890', details: 'BSI 7123456789 a.n IKBAL' };
-        let homeData = { photoUrl: "https://images.unsplash.com/photo-1590076215667-875d45353163?q=80&w=1000", title: "Portal Alumni IKBAL", desc: "Wadah silaturahmi & transparansi." };
+        // === PENTING: ISI URL WEB APP GOOGLE SCRIPT ANDA DI SINI ===
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwma0Da_Vh2cSuAP-nUTb93_7yGzPVCBCQsPkgy5rRaYA60XZIerAopFD-EetKkvyru/exec"; 
 
-        window.showToast = (msg, type = 'success') => {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            const bg = document.getElementById('toast-icon-bg');
-            bg.className = `w-8 h-8 rounded-full flex items-center justify-center text-slate-950 ${type === 'error' ? 'bg-red-500' : 'bg-pesantren-green'}`;
-            document.getElementById('toast-icon').className = type === 'error' ? 'ph-bold ph-x' : 'ph-bold ph-check';
-            t.classList.remove('-translate-y-48'); t.classList.add('translate-y-0');
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { t.classList.remove('translate-y-0'); t.classList.add('-translate-y-48'); }, 3000);
-        };
-
-        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 5).toUpperCase();
-        const formatIDR = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
-
-        window.copyToClipboard = (text) => {
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            window.showToast("Berhasil disalin!");
-        };
-
-        window.toggleModal = (id, show) => { 
-            const el = document.getElementById(id);
-            if(el) { if(show) { el.classList.remove('hidden'); history.pushState({ modalId: id }, ""); } else { el.classList.add('hidden'); } }
-        };
+        let localAlumni = [];
+        let localLoker = [];
+        let localSaldo = [];
         
-        window.closeActiveModal = () => { history.back(); };
-        window.onpopstate = () => {
-            ['adminModal', 'alumniFormModal', 'lokerFormModal', 'adminSaldoModal', 'homeEditModal', 'appSettingsModal', 'lokerDetailModal'].forEach(id => { 
-                const el = document.getElementById(id); if(el) el.classList.add('hidden'); 
+        let localSettings = JSON.parse(localStorage.getItem('ikbalSettings')) || { 
+            homeTitle: "Ahlan wa Sahlan, Keluarga IKBAL", 
+            homeDesc: "Portal Alumni Terintegrasi", 
+            wa: "628", 
+            bank: "Info rekening akan segera diperbarui." 
+        };
+        let isAdmin = false;
+
+        const showLoading = (text = "Memuat...") => {
+            const overlay = document.getElementById('loading-overlay');
+            const textEl = document.getElementById('loading-text');
+            if (textEl) textEl.innerText = text;
+            if (overlay) overlay.style.display = 'flex';
+        };
+        const hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
+
+        // --- FETCH DATA DARI GOOGLE SHEETS (TEXT/CSV STYLE) ---
+        const fetchAllData = async () => {
+            try {
+                showLoading("Menarik Data Sheets...");
+                const response = await fetch(SCRIPT_URL, { redirect: 'follow' });
+                const textData = await response.text();
+                
+                if(textData.includes("<html") || textData.includes("<body")) {
+                    throw new Error("Akses Ditolak. Pastikan pengaturan Google Script Anda di-set ke 'Who has access: Anyone'.");
+                }
+
+                // Mengolah Plain Text (BUKAN JSON)
+                localAlumni = []; localLoker = []; localSaldo = [];
+
+                const tables = textData.split("===TABLE:");
+                tables.forEach(table => {
+                    if(!table.trim()) return;
+                    const lines = table.trim().split("\n");
+                    const tableName = lines[0].replace("===", "").trim();
+                    if(lines.length < 2) return;
+                    
+                    const headers = lines[1].split("|").map(h => h.split(' ')[0].toLowerCase().replace(/[^a-z]/g, ''));
+                    const rows = [];
+                    
+                    for(let i = 2; i < lines.length; i++) {
+                        if(!lines[i].trim()) continue;
+                        const vals = lines[i].split("|");
+                        let obj = {};
+                        headers.forEach((h, index) => { obj[h] = vals[index] || ""; });
+                        if(obj.id) rows.push(obj);
+                    }
+
+                    if(tableName === 'Alumni') localAlumni = rows;
+                    if(tableName === 'Loker') localLoker = rows;
+                    if(tableName === 'Saldo') localSaldo = rows;
+                });
+
+                renderAlumni();
+                renderLoker();
+                renderSaldo();
+                updateSettingsUI();
+            } catch (error) {
+                console.error("Error Fetching:", error);
+                alert("Gagal membaca database: " + error.message);
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // --- POST DATA KE GOOGLE SHEETS (MENGGUNAKAN FORM DATA) ---
+        const postDataToSheet = async (sheetName, payload, action = 'save', formModalId) => {
+            showLoading("Menyimpan Data...");
+            try {
+                // Menggunakan URLSearchParams agar tidak menggunakan JSON
+                const params = new URLSearchParams();
+                params.append('action', action);
+                params.append('targetSheet', sheetName);
+                for (const key in payload) {
+                    params.append(key, payload[key]);
+                }
+
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: params // Browser otomatis set header application/x-www-form-urlencoded
+                });
+                
+                const resultText = await response.text();
+                if(resultText.includes("<html")) throw new Error("Terhalang halaman Login Google.");
+                if(resultText.includes("Error")) throw new Error(resultText);
+                
+                if(formModalId) toggleModal(formModalId, false);
+                await fetchAllData(); 
+            } catch (error) {
+                console.error("Error Saving:", error);
+                alert("Gagal menyimpan data: " + error.message);
+            } finally {
+                hideLoading();
+            }
+        };
+
+        window.deleteData = async (sheetName, idInputId) => {
+            const id = document.getElementById(idInputId).value;
+            if(!id) return;
+            if(!confirm(`Anda yakin ingin menghapus data ini dari tabel ${sheetName}?`)) return;
+            await postDataToSheet(sheetName, { id: id }, 'delete', `${sheetName.toLowerCase()}FormModal`);
+        };
+
+
+        // --- UI NAVIGATION ---
+        window.switchNav = (target) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const targetPage = document.getElementById(`page-${target}`);
+            if (targetPage) targetPage.classList.add('active');
+            
+            const btnBack = document.getElementById('btn-back');
+            const logo = document.getElementById('header-logo');
+            const fab = document.getElementById('fab-add');
+            
+            if (target === 'beranda') {
+                btnBack.classList.add('hidden');
+                logo.classList.remove('hidden');
+                fab.classList.add('hidden');
+            } else {
+                btnBack.classList.remove('hidden');
+                logo.classList.add('hidden');
+                fab.classList.toggle('hidden', !(target === 'alumni' || target === 'loker') || !isAdmin);
+            }
+            window.scrollTo(0,0);
+        };
+
+        window.toggleModal = (id, show) => {
+            const el = document.getElementById(id);
+            if (show) {
+                el.classList.remove('hidden');
+                if (id === 'adminModal') setTimeout(() => document.getElementById('adminPin').focus(), 100);
+            } else {
+                el.classList.add('hidden');
+            }
+        };
+
+        window.handleLogin = () => {
+            const pin = document.getElementById('adminPin').value;
+            if(pin === "123456") {
+                isAdmin = true;
+                document.body.classList.add('is-admin');
+                toggleModal('adminModal', false);
+                switchNav('admin');
+                document.getElementById('btn-login-trigger').classList.add('hidden');
+                document.getElementById('btn-logout-trigger').classList.remove('hidden');
+                renderAlumni(); 
+                renderLoker();
+                renderSaldo();
+            } else {
+                alert("PIN Salah! Coba lagi.");
+            }
+            document.getElementById('adminPin').value = '';
+        };
+
+        window.logout = () => {
+            if(!confirm("Anda yakin ingin keluar dari mode Admin?")) return;
+            isAdmin = false;
+            document.body.classList.remove('is-admin');
+            switchNav('beranda');
+            document.getElementById('btn-login-trigger').classList.remove('hidden');
+            document.getElementById('btn-logout-trigger').classList.add('hidden');
+            renderAlumni();
+            renderLoker();
+            renderSaldo();
+        };
+
+        // --- RENDER DATA ---
+        window.renderAlumni = () => {
+            const list = document.getElementById('alumni-list');
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            list.innerHTML = '';
+            
+            const filtered = localAlumni.filter(a => 
+                (a.namalengkap||a.nama||'').toLowerCase().includes(search) || 
+                (a.domisili||'').toLowerCase().includes(search)
+            );
+            
+            if(filtered.length === 0) {
+                list.innerHTML = `<p class="text-[10px] text-slate-500 uppercase text-center py-10">Data tidak ditemukan</p>`;
+                return;
+            }
+
+            filtered.forEach(a => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 p-4 rounded-3xl border border-white/5 flex items-center justify-between tap-scale";
+                card.onclick = () => { if(isAdmin) openAlumniForm(a); };
+                const angkatanStr = (a.angkatan||'??').toString();
+                const nama = a.namalengkap || a.nama || 'Tanpa Nama';
+                card.innerHTML = `
+                    <div class="flex items-center gap-4 text-left">
+                        <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 font-black text-[10px]">
+                            ${angkatanStr.length >= 2 ? angkatanStr.slice(-2) : angkatanStr}
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-black text-white">${nama}</h4>
+                            <p class="text-[8px] text-slate-500 uppercase font-bold">${a.domisili || '-'} • ${a.pekerjaan || 'Umum'}</p>
+                        </div>
+                    </div>
+                    ${isAdmin ? '<i class="ph ph-pencil-simple text-emerald-500"></i>' : '<i class="ph ph-caret-right text-slate-800"></i>'}
+                `;
+                list.appendChild(card);
             });
         };
 
-        async function fetchAPI(action, payload = {}) {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action, ...payload })
-                });
-                return await response.json();
-            } catch(e) { throw e; }
-        }
-
-        window.initData = async () => {
-            try {
-                const res = await fetch(SCRIPT_URL + "?action=getData");
-                const data = await res.json();
-                
-                allAlumni = data.alumni || [];
-                allLoker = data.loker || [];
-                allConfirms = data.konfirmasi || [];
-                totalSaldo = Number(data.totalInfaq) || 0;
-                
-                if(data.bankInfo) { 
-                    bankInfo = data.bankInfo;
-                    document.getElementById('display-bank-info').innerText = bankInfo.details;
-                    document.getElementById('btn-wa-admin').href = `https://wa.me/${bankInfo.waNumber}?text=Assalamu'alaikum+Admin+IKBAL...`;
-                    if(document.getElementById('setWaNumber')) document.getElementById('setWaNumber').value = bankInfo.waNumber;
-                    if(document.getElementById('setBankInfo')) document.getElementById('setBankInfo').value = bankInfo.details;
-                }
-                
-                if(data.homeData) { homeData = data.homeData; updateHomeUI(); }
-                
-                const alamatList = [...new Set(allAlumni.map(a => a.alamat).filter(Boolean))].sort();
-                const selAlamat = document.getElementById('filterAlamat');
-                if (selAlamat) { selAlamat.innerHTML = '<option value="">Semua Desa</option>' + alamatList.map(a => `<option value="${a}">${a}</option>`).join(''); }
-                
-                window.filterAlumni();
-                renderLokerList(allLoker);
-                renderTransactionHistory(allConfirms);
-                updateAdminStats();
-                
-                document.getElementById('total-infaq-display').innerText = formatIDR(totalSaldo);
-                const masuk = allConfirms.filter(c => c.tipe === 'tambah').reduce((a, b) => a + Number(b.nominal), 0);
-                const keluar = allConfirms.filter(c => c.tipe === 'kurang').reduce((a, b) => a + Number(b.nominal), 0);
-                document.getElementById('total-masuk-display').innerText = formatIDR(masuk);
-                document.getElementById('total-keluar-display').innerText = formatIDR(keluar);
-                
-                const ratio = masuk > 0 ? Math.max(0, Math.min(((masuk - keluar) / masuk) * 100, 100)) : 0;
-                document.getElementById('pemasukan-bar').style.width = ratio + '%';
-
-            } catch(e) { window.showToast("Gagal menyinkronkan cloud", "error"); }
-        };
-
-        function updateAdminStats() {
-            const alumniStat = document.getElementById('admin-stat-alumni');
-            const transStat = document.getElementById('admin-stat-trans');
-            if(alumniStat) alumniStat.innerText = allAlumni.length;
-            if(transStat) transStat.innerText = allConfirms.length;
-        }
-
-        function updateHomeUI() {
-            const img = document.getElementById('display-hero-img');
-            img.src = homeData.photoUrl || 'https://images.unsplash.com/photo-1590076215667-875d45353163?q=80&w=1000';
-            document.getElementById('display-hero-title').innerText = homeData.title;
-            document.getElementById('display-hero-desc').innerText = homeData.desc;
-        }
-
-        function renderTransactionHistory(data) {
-            const container = document.getElementById('donation-verified-list');
-            const filtered = data.filter(c => c.tipe === 'tambah' || c.tipe === 'kurang')
-                                 .sort((a,b) => (b.timestamp || Date.now()) - (a.timestamp || Date.now()));
-            if(!filtered.length) { container.innerHTML = '<p class="py-6 text-center text-slate-500 italic text-[10px]">Belum ada riwayat transaksi.</p>'; return; }
+        window.renderLoker = () => {
+            const list = document.getElementById('loker-list');
+            list.innerHTML = '';
             
-            container.innerHTML = filtered.map(c => {
-                const isOut = c.tipe === 'kurang';
-                return `
-                <div class="glass-panel p-4 rounded-3xl flex justify-between items-center text-left">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="w-10 h-10 flex-shrink-0 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5 ${isOut ? 'text-rose-500' : 'text-emerald-500'}">
-                            <i class="${isOut ? 'ph-bold ph-arrow-circle-up-right' : 'ph-bold ph-arrow-circle-down-left'} text-xl"></i>
-                        </div>
-                        <div class="overflow-hidden">
-                            <h6 class="text-xs font-black text-white truncate uppercase tracking-tight">${c.nama}</h6>
-                            <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest truncate">${c.category || 'Kas'} • ${c.updatedAt || 'Baru'}</p>
-                        </div>
-                    </div>
-                    <div class="text-right flex-shrink-0 pl-2 font-black ${isOut ? 'text-rose-500' : 'text-emerald-500'}">
-                        <p class="text-[11px]">${isOut ? '-' : '+'} ${formatIDR(c.nominal)}</p>
-                    </div>
-                </div>`;
-            }).join('');
-        }
+            if(localLoker.length === 0) {
+                list.innerHTML = `<p class="text-[10px] text-slate-500 uppercase text-center py-10">Belum ada info lowongan</p>`;
+                return;
+            }
 
-        window.filterAlumni = () => {
-            const q = document.getElementById('searchInput').value.toLowerCase();
-            const gen = document.getElementById('filterGender').value;
-            const alm = document.getElementById('filterAlamat').value;
-            const filtered = allAlumni.filter(a => (a.nama||'').toLowerCase().includes(q) && (gen === "" || a.kelamin === gen) && (alm === "" || a.alamat === alm));
-            const container = document.getElementById('alumni-list-mobile');
-            const isAdmin = document.body.classList.contains('is-admin');
-            if(!filtered.length) { container.innerHTML = '<p class="py-10 text-center text-slate-500 italic text-xs">Data tidak ditemukan.</p>'; return; }
-            container.innerHTML = filtered.sort((a,b) => a.nama.localeCompare(b.nama)).map(a => `
-                <div class="glass-panel p-4 rounded-3xl flex flex-col gap-3 text-left">
-                    <div class="flex items-center gap-4 border-b border-slate-800/60 pb-3">
-                        <div class="w-12 h-12 flex-shrink-0 rounded-2xl ${a.kelamin === 'Laki-laki' ? 'bg-blue-500/10' : 'bg-pink-500/10'} flex items-center justify-center border border-white/5">
-                            <i class="${a.kelamin === 'Laki-laki' ? 'ph-bold ph-gender-male text-blue-400' : 'ph-bold ph-gender-female text-pink-400'} text-2xl"></i>
-                        </div>
-                        <div class="overflow-hidden flex-1">
-                            <h5 class="text-sm font-black text-white truncate uppercase">${a.nama}</h5>
-                            <p class="text-[10px] text-slate-500 truncate mt-0.5">${a.bin ? `bin/ti ${a.bin}` : 'Santri Lubabuth Tholibin'}</p>
-                        </div>
+            localLoker.forEach(l => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 p-5 rounded-3xl border border-blue-500/20 text-left";
+                const judul = l.judulpekerjaan || l.judul || 'Posisi';
+                const kontak = (l.kontakwa || l.kontak || '').toString().replace(/\D/g,'');
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3" ${isAdmin ? 'onclick="openLokerForm('+JSON.stringify(l).replace(/"/g, '&quot;')+')"' : ''}>
+                        <h4 class="text-xs font-black text-white uppercase">${judul}</h4>
+                        <span class="text-[7px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full uppercase font-black">${l.instansi || '-'}</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                        <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 truncate text-center">${a.kelamin}</div>
-                        <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 truncate text-center">${a.alamat}</div>
+                    <p class="text-[10px] text-slate-400 leading-relaxed mb-4 whitespace-pre-wrap" ${isAdmin ? 'onclick="openLokerForm('+JSON.stringify(l).replace(/"/g, '&quot;')+')"' : ''}>${l.deskripsi || l.desc || ''}</p>
+                    <div class="flex gap-2">
+                        <a href="https://wa.me/${kontak}" class="flex-1 text-center py-3 bg-blue-600 rounded-2xl text-[9px] font-black uppercase text-white shadow-lg">Lamar Sekarang</a>
+                        ${isAdmin ? `<button onclick="openLokerForm(${JSON.stringify(l).replace(/"/g, '&quot;')})" class="w-12 flex items-center justify-center bg-emerald-500/10 rounded-2xl text-emerald-500"><i class="ph ph-pencil"></i></button>` : ''}
                     </div>
-                    ${isAdmin ? `<button onclick="window.editAlumni('${a.id}')" class="w-full py-2.5 bg-pesantren-green text-slate-950 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg">Edit Profil</button>` : 
-                    (a.kontak ? `<a href="https://wa.me/${(a.kontak||'').replace(/\D/g,'').replace(/^0/,'62')}" target="_blank" class="w-full flex items-center justify-center py-2.5 bg-emerald-500/10 text-emerald-500 rounded-xl text-[10px] font-black uppercase border border-emerald-500/20"><i class="ph-bold ph-whatsapp-logo mr-1"></i> WhatsApp</a>` : '')}
-                </div>`).join('');
+                `;
+                list.appendChild(card);
+            });
         };
 
-        function renderLokerList(data) {
-            const container = document.getElementById('loker-list');
-            const isAdmin = document.body.classList.contains('is-admin');
-            if(!data.length) { container.innerHTML = '<p class="py-10 text-center text-slate-500 italic text-xs px-10">Belum ada lowongan terbaru.</p>'; return; }
-            container.innerHTML = data.map(n => `<div class="glass-panel p-5 rounded-[2rem] border-l-4 border-blue-500 cursor-pointer" onclick="window.openLokerDetail('${n.id}')"><div class="flex justify-between items-start text-left"><div class="overflow-hidden flex-1"><p class="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">${n.tanggal}</p><h5 class="text-sm font-black text-white leading-snug line-clamp-2 uppercase">${n.judul}</h5></div><div class="flex-shrink-0 mt-1 pl-2">${isAdmin ? `<button onclick="event.stopPropagation(); window.editLoker('${n.id}')" class="w-9 h-9 flex items-center justify-center bg-blue-500/10 text-blue-400 rounded-xl"><i class="ph-bold ph-pencil"></i></button>` : `<i class="ph-bold ph-caret-right text-slate-600"></i>`}</div></div></div>`).join('');
-        }
+        window.renderSaldo = () => {
+            const list = document.getElementById('transaction-list');
+            const display = document.getElementById('total-saldo-display');
+            let total = 0;
+            list.innerHTML = '';
+            
+            if(localSaldo.length === 0) {
+                list.innerHTML = `<p class="text-[10px] text-slate-500 uppercase text-center py-10">Belum ada catatan mutasi</p>`;
+                if(display) display.innerText = "Rp 0";
+                updateStats(0);
+                return;
+            }
 
-        window.openLokerDetail = (id) => {
-            const n = allLoker.find(x => String(x.id) === String(id)); if(!n) return;
-            document.getElementById('lokerDetailTitle').innerText = n.judul;
-            document.getElementById('lokerDetailContent').innerText = n.isi;
-            const isAdmin = document.body.classList.contains('is-admin');
-            document.getElementById('lokerDetailActions').innerHTML = isAdmin ? 
-                `<button onclick="closeActiveModal(); setTimeout(()=>window.editLoker('${n.id}'), 100);" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Edit Postingan</button>` :
-                `<button onclick="window.open('https://wa.me/${bankInfo.waNumber}?text=Tanya+Loker%3A+${encodeURIComponent(n.judul)}')" class="w-full py-4 bg-pesantren-green text-slate-950 rounded-2xl font-black uppercase text-[10px] tracking-widest flex justify-center items-center gap-2 shadow-lg"><i class="ph-bold ph-whatsapp-logo text-lg"></i> Lamar via WA</button>`;
-            toggleModal('lokerDetailModal', true);
+            localSaldo.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).forEach(s => {
+                const nom = Number(s.nominal) || 0;
+                const tipe = (s.tipe || 'masuk').toLowerCase();
+                if(tipe === 'masuk') total += nom; else total -= nom;
+                
+                const card = document.createElement('div');
+                card.className = "flex justify-between items-center p-4 bg-slate-900/50 rounded-2xl border border-white/5 tap-scale";
+                card.onclick = () => { if(isAdmin) openSaldoForm(s); };
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 text-left">
+                        <i class="ph ${tipe === 'masuk' ? 'ph-arrow-down-left text-emerald-500' : 'ph-arrow-up-right text-rose-500'} text-xl"></i>
+                        <div>
+                            <p class="text-[10px] font-black text-white uppercase">${s.keterangan || 'Mutasi'}</p>
+                            <p class="text-[8px] text-slate-600">${s.tanggal || '???'}</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-black ${tipe === 'masuk' ? 'text-emerald-400' : 'text-rose-400'}">${tipe === 'masuk' ? '+' : '-'}${nom.toLocaleString('id-ID')}</span>
+                `;
+                list.appendChild(card);
+            });
+            
+            const fmt = "Rp " + total.toLocaleString('id-ID');
+            if(display) display.innerText = fmt;
+            updateStats(total);
         };
 
-        function switchNav(id) {
-            activePage = id; 
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.replace('text-pesantren-green', 'text-slate-500'); });
-            const target = document.getElementById('page-' + id);
-            if(target) target.classList.add('active');
-            const navBtn = document.getElementById('nav-' + id);
-            if(navBtn) navBtn.classList.replace('text-slate-500', 'text-pesantren-green');
-            const config = { beranda: ['Portal IKBAL','Beranda'], loker: ['Info Karir','Bursa Kerja'], donasi: ['Keuangan Alumni','Saldo'], alumni: ['Database','Direktori'], admin: ['Kendali','Admin Center'] };
-            document.getElementById('app-title').innerText = config[id][1]; 
-            document.getElementById('app-subtitle').innerText = config[id][0];
-            const fab = document.getElementById('fab-add');
-            (document.body.classList.contains('is-admin') && ['alumni','loker'].includes(id)) ? fab.classList.remove('hidden') : fab.classList.add('hidden');
-        }
-
-        function handleLogin() {
-            if(document.getElementById('adminPin').value === PIN_ADMIN) {
-                document.body.classList.add('is-admin'); 
-                document.getElementById('btn-login-trigger').classList.add('hidden');
-                document.getElementById('btn-logout-trigger').classList.remove('hidden');
-                closeActiveModal(); switchNav(activePage); window.showToast("Akses Pengurus Dibuka");
-            } else { window.showToast("PIN Salah!", "error"); }
-        }
-
-        function logout() {
-            document.body.classList.remove('is-admin'); 
-            document.getElementById('btn-login-trigger').classList.remove('hidden');
-            document.getElementById('btn-logout-trigger').classList.add('hidden');
-            document.getElementById('adminPin').value = "";
-            switchNav('beranda'); window.showToast("Akses Ditutup");
-        }
-
-        document.getElementById('adminSaldoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true;
-            try { 
-                await fetchAPI('updateSaldoManual', { 
-                    nominal: parseInt(document.getElementById('adminSaldoAmount').value), 
-                    tipe: document.querySelector('input[name="saldoType"]:checked').value, 
-                    category: document.getElementById('adminSaldoCategory').value,
-                    keterangan: document.getElementById('adminSaldoKeterangan').value 
-                });
-                window.showToast("Berhasil diposting"); await window.initData(); closeActiveModal(); document.getElementById('adminSaldoForm').reset();
-            } catch(e) { window.showToast("Error Posting", "error"); } finally { btn.disabled = false; }
-        });
-
-        document.getElementById('appSettingsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const newData = { waNumber: document.getElementById('setWaNumber').value, details: document.getElementById('setBankInfo').value };
-                await fetchAPI('saveSettings', newData);
-                bankInfo = newData; window.showToast("Settings Terupdate"); closeActiveModal(); window.initData();
-            } catch(e) { window.showToast("Simpan gagal", "error"); }
-        });
-
-        document.getElementById('homeEditForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try { 
-                const newData = { photoUrl: document.getElementById('homePhotoUrl').value, title: document.getElementById('homeTitle').value, desc: document.getElementById('homeDesc').value };
-                await fetchAPI('saveHomeData', newData); homeData = newData; updateHomeUI(); closeActiveModal(); window.showToast("Home Updated"); 
-            } catch(e) { window.showToast("Gagal update", "error"); }
-        });
-
-        document.getElementById('alumniForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); 
-            try { 
-                const d = { action: 'saveAlumni', id: document.getElementById('alumniId').value || generateId(), nama: document.getElementById('alumniNama').value, bin: document.getElementById('alumniBin').value, kelamin: document.getElementById('alumniKelamin').value, alamat: document.getElementById('alumniAlamat').value, kontak: document.getElementById('alumniKontak').value };
-                await fetchAPI('saveAlumni', d); await window.initData(); closeActiveModal(); window.showToast("Data Disimpan"); 
-            } catch(err) { window.showToast("Gagal simpan", "error"); }
-        });
-
-        document.getElementById('lokerForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); 
-            try { 
-                const d = { action: 'saveLoker', id: document.getElementById('lokerId').value || generateId(), judul: document.getElementById('lokerJudul').value, tanggal: document.getElementById('lokerTanggal').value, isi: document.getElementById('lokerIsi').value };
-                await fetchAPI('saveLoker', d); await window.initData(); closeActiveModal(); window.showToast("Loker Terbit"); 
-            } catch(err) { window.showToast("Gagal posting", "error"); }
-        });
-
-        window.deleteItem = async (type, id) => {
-            if(!confirm("Hapus permanen?")) return;
-            try { await fetchAPI('deleteItem', { type, id }); window.initData(); closeActiveModal(); window.showToast("Terhapus"); }
-            catch(e) { window.showToast("Hapus gagal", "error"); }
+        const updateStats = (currentSaldo) => {
+            const fmt = "Rp " + (currentSaldo || 0).toLocaleString('id-ID');
+            const ids = ['pub-stat-alumni', 'pub-stat-loker', 'pub-stat-saldo', 'stat-alumni', 'stat-loker', 'stat-saldo'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (id.includes('alumni')) el.innerText = localAlumni.length;
+                else if (id.includes('loker')) el.innerText = localLoker.length;
+                else el.innerText = fmt;
+            });
         };
 
-        function handleFabAction() {
-            if(activePage === 'alumni') { document.getElementById('alumniForm').reset(); document.getElementById('alumniId').value = ""; document.getElementById('btnHapusAlumni').classList.add('hidden'); toggleModal('alumniFormModal', true); }
-            else if(activePage === 'loker') { document.getElementById('lokerForm').reset(); document.getElementById('lokerId').value = ""; document.getElementById('btnHapusLoker').classList.add('hidden'); toggleModal('lokerFormModal', true); }
-        }
-
-        window.openEditHome = () => {
-            document.getElementById('homePhotoUrl').value = homeData.photoUrl;
-            document.getElementById('homeTitle').value = homeData.title;
-            document.getElementById('homeDesc').value = homeData.desc;
-            toggleModal('homeEditModal', true);
+        const updateSettingsUI = () => {
+            document.getElementById('home-title').innerHTML = (localSettings.homeTitle || 'Ahlan wa Sahlan').replace(/\n/g, '<br>');
+            document.getElementById('home-desc').innerText = localSettings.homeDesc || 'Portal IKBAL';
+            document.getElementById('display-bank-info').innerText = localSettings.bank || 'Info bank segera menyusul.';
+            
+            document.getElementById('setHomeTitle').value = localSettings.homeTitle || '';
+            document.getElementById('setHomeDesc').value = localSettings.homeDesc || '';
+            document.getElementById('setWA').value = localSettings.wa || '';
+            document.getElementById('setBank').value = localSettings.bank || '';
+            
+            const btnWaAdmin = document.getElementById('btn-wa-admin');
+            if(btnWaAdmin) btnWaAdmin.href = `https://wa.me/${(localSettings.wa||'').replace(/\D/g,'')}`;
         };
 
-        window.editAlumni = (id) => {
-            const a = allAlumni.find(x => String(x.id) === String(id)); if(!a) return;
-            document.getElementById('alumniId').value = a.id;
-            document.getElementById('alumniNama').value = a.nama;
-            document.getElementById('alumniBin').value = a.bin || "";
-            document.getElementById('alumniKelamin').value = a.kelamin;
-            document.getElementById('alumniAlamat').value = a.alamat;
-            document.getElementById('alumniKontak').value = a.kontak || "";
-            document.getElementById('btnHapusAlumni').classList.remove('hidden');
+        // --- EKSPOR DATA ---
+        window.openExportModal = () => {
+            const select = document.getElementById('exportDomicile');
+            const domiciles = [...new Set(localAlumni.map(a => a.domisili))].filter(Boolean).sort();
+            select.innerHTML = '<option value="Semua">Semua Wilayah</option>';
+            domiciles.forEach(d => { select.innerHTML += `<option value="${d}">${d}</option>`; });
+            
+            updateExportPreview();
+            toggleModal('exportModal', true);
+        };
+
+        window.updateExportPreview = () => {
+            const gender = document.getElementById('exportGender')?.value || 'Semua';
+            const domicile = document.getElementById('exportDomicile')?.value || 'Semua';
+            let filtered = localAlumni;
+            if (gender !== 'Semua') filtered = filtered.filter(a => a.gender === gender);
+            if (domicile !== 'Semua') filtered = filtered.filter(a => a.domisili === domicile);
+            document.getElementById('export-count-preview').innerText = `Terpilih: ${filtered.length} Alumni`;
+        };
+
+        window.downloadAlumniCSV = () => {
+            const gender = document.getElementById('exportGender')?.value || 'Semua';
+            const domicile = document.getElementById('exportDomicile')?.value || 'Semua';
+            let filtered = localAlumni;
+            if (gender !== 'Semua') filtered = filtered.filter(a => a.gender === gender);
+            if (domicile !== 'Semua') filtered = filtered.filter(a => a.domisili === domicile);
+            
+            if(filtered.length === 0) return alert("Tidak ada data untuk diunduh.");
+            
+            const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+            const rows = [
+                ["Nama Lengkap", "Gender", "Angkatan", "Domisili", "Pekerjaan"],
+                ...filtered.map(a => [escape(a.namalengkap||a.nama), escape(a.gender), escape(a.angkatan), escape(a.domisili), escape(a.pekerjaan)])
+            ];
+            const csvContent = "\uFEFF" + rows.map(e => e.join(",")).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `ikbal_alumni_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            toggleModal('exportModal', false);
+        };
+
+        // --- MANAJEMEN FORM ---
+        window.openAlumniForm = (data = null) => {
+            document.getElementById('alumniForm').reset();
+            document.getElementById('alumniId').value = data?.id || '';
+            document.getElementById('btn-delete-alumni').classList.toggle('hidden', !data);
+            if(data) {
+                document.getElementById('alumniNama').value = data.namalengkap || data.nama || '';
+                document.getElementById('alumniAngkatan').value = data.angkatan || '';
+                document.getElementById('alumniDomisili').value = data.domisili || '';
+                document.getElementById('alumniGender').value = data.gender || '';
+                document.getElementById('alumniPekerjaan').value = data.pekerjaan || '';
+            }
             toggleModal('alumniFormModal', true);
         };
 
-        window.editLoker = (id) => {
-            const n = allLoker.find(x => String(x.id) === String(id)); if(!n) return;
-            document.getElementById('lokerId').value = n.id;
-            document.getElementById('lokerJudul').value = n.judul;
-            document.getElementById('lokerTanggal').value = n.tanggal;
-            document.getElementById('lokerIsi').value = n.isi;
-            document.getElementById('btnHapusLoker').classList.remove('hidden');
+        window.openLokerForm = (data = null) => {
+            document.getElementById('lokerForm').reset();
+            document.getElementById('lokerId').value = data?.id || '';
+            document.getElementById('btn-delete-loker').classList.toggle('hidden', !data);
+            if(data) {
+                document.getElementById('lokerJudul').value = data.judulpekerjaan || data.judul || '';
+                document.getElementById('lokerInstansi').value = data.instansi || '';
+                document.getElementById('lokerDesc').value = data.deskripsi || data.desc || '';
+                document.getElementById('lokerKontak').value = data.kontakwa || data.kontak || '';
+            }
             toggleModal('lokerFormModal', true);
         };
 
-        window.exportAlumniToCSV = () => {
-            let csv = "ID,Nama,Bin,Kelamin,Domisili,Kontak\n" + allAlumni.map(a => `${a.id},"${a.nama}","${a.bin || ''}","${a.kelamin}","${a.alamat}","${a.kontak}"`).join("\n");
-            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = `Alumni_IKBAL.csv`; link.click();
+        window.openSaldoForm = (data = null) => {
+            document.getElementById('saldoForm').reset();
+            document.getElementById('txId').value = data?.id || '';
+            document.getElementById('btn-delete-tx').classList.toggle('hidden', !data);
+            document.getElementById('saldoFormTitle').innerText = data ? 'Edit Transaksi' : 'Input Kas';
+            if(data) {
+                setTxType(data.tipe || 'masuk');
+                document.getElementById('txNominal').value = data.nominal || 0;
+                document.getElementById('txKeterangan').value = data.keterangan || '';
+                
+                let dateStr = '';
+                if(data.tanggal) {
+                    const d = new Date(data.tanggal);
+                    if(!isNaN(d)) dateStr = d.toISOString().split('T')[0];
+                    else dateStr = data.tanggal.replace(/\//g, '-');
+                }
+                document.getElementById('txTanggal').value = dateStr;
+            } else {
+                setTxType('masuk');
+                document.getElementById('txTanggal').value = new Date().toISOString().split('T')[0];
+            }
+            toggleModal('saldoFormModal', true);
         };
 
-        document.addEventListener('DOMContentLoaded', window.initData);
+        window.setTxType = (type) => {
+            document.getElementById('txType').value = type;
+            const mBtn = document.getElementById('tx-masuk-btn');
+            const kBtn = document.getElementById('tx-keluar-btn');
+            if (type === 'masuk') {
+                mBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase bg-emerald-500 text-emerald-950";
+                kBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase text-slate-500";
+            } else {
+                kBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase bg-rose-500 text-rose-950";
+                mBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase text-slate-500";
+            }
+        };
+
+        window.handleFabAction = () => {
+            const activePage = document.querySelector('.page.active')?.id;
+            if (activePage === 'page-alumni') openAlumniForm();
+            if (activePage === 'page-loker') openLokerForm();
+        };
+
+        // --- SUBMIT DATA KE SHEETS ---
+        document.getElementById('alumniForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                id: document.getElementById('alumniId').value || crypto.randomUUID(),
+                namalengkap: document.getElementById('alumniNama').value,
+                angkatan: document.getElementById('alumniAngkatan').value,
+                gender: document.getElementById('alumniGender').value,
+                domisili: document.getElementById('alumniDomisili').value,
+                pekerjaan: document.getElementById('alumniPekerjaan').value,
+            };
+            await postDataToSheet('Alumni', payload, 'save', 'alumniFormModal');
+        };
+
+        document.getElementById('lokerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                id: document.getElementById('lokerId').value || crypto.randomUUID(),
+                judulpekerjaan: document.getElementById('lokerJudul').value,
+                instansi: document.getElementById('lokerInstansi').value,
+                deskripsi: document.getElementById('lokerDesc').value,
+                kontakwa: document.getElementById('lokerKontak').value,
+            };
+            await postDataToSheet('Loker', payload, 'save', 'lokerFormModal');
+        };
+
+        document.getElementById('saldoForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                id: document.getElementById('txId').value || crypto.randomUUID(),
+                tipe: document.getElementById('txType').value,
+                nominal: document.getElementById('txNominal').value,
+                keterangan: document.getElementById('txKeterangan').value,
+                tanggal: document.getElementById('txTanggal').value,
+            };
+            await postDataToSheet('Saldo', payload, 'save', 'saldoFormModal');
+        };
+
+        document.getElementById('homeForm').onsubmit = (e) => {
+            e.preventDefault();
+            localSettings.homeTitle = document.getElementById('setHomeTitle').value;
+            localSettings.homeDesc = document.getElementById('setHomeDesc').value;
+            localStorage.setItem('ikbalSettings', JSON.stringify(localSettings));
+            updateSettingsUI();
+            toggleModal('homeSettingsModal', false);
+            alert("Teks Beranda diperbarui!");
+        };
+
+        document.getElementById('settingsForm').onsubmit = (e) => {
+            e.preventDefault();
+            localSettings.wa = document.getElementById('setWA').value;
+            localSettings.bank = document.getElementById('setBank').value;
+            localStorage.setItem('ikbalSettings', JSON.stringify(localSettings));
+            updateSettingsUI();
+            toggleModal('appSettingsModal', false);
+            alert("Kontak & Bank diperbarui!");
+        };
+
+        window.onload = () => {
+            updateSettingsUI();
+            fetchAllData();
+        };
     </script>
 </body>
 </html>
