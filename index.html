@@ -224,21 +224,21 @@
     <!-- MODALS -->
     <div id="adminModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6 bg-pesantren-dark/95 backdrop-blur-md">
         <div class="absolute inset-0" onclick="toggleModal('adminModal', false)"></div>
-    <!-- EKSPOR DATA -->
+        <div class="relative bg-slate-900 w-full max-w-xs p-10 rounded-5xl border border-white/5 text-center">
+            <h3 class="text-[10px] font-black text-slate-500 mb-8 uppercase tracking-[0.3em]">Akses Pengelola</h3>
+            <input type="password" id="adminPin" maxlength="6" placeholder="••••••" class="w-full bg-pesantren-dark border-none rounded-3xl py-6 text-center text-4xl text-pesantren-green mb-8 outline-none focus:ring-2 focus:ring-pesantren-green">
+            <button onclick="handleLogin()" class="w-full bg-pesantren-green text-pesantren-dark font-black py-5 rounded-3xl uppercase tap-scale shadow-lg">Masuk</button>
+        </div>
+    </div>
+
     <div id="exportModal" class="fixed inset-0 z-[400] hidden flex items-end justify-center bg-pesantren-dark/90 backdrop-blur-sm">
         <div class="absolute inset-0" onclick="toggleModal('exportModal', false)"></div>
         <div class="relative bg-slate-900 w-full max-w-md p-10 rounded-t-5xl border-t border-white/5 text-left max-h-[90vh] overflow-y-auto no-scrollbar">
             <h3 class="text-xs font-black text-white mb-2 uppercase tracking-widest">Ekspor Alumni</h3>
             <p id="export-count-preview" class="text-[10px] font-bold text-emerald-400 uppercase mb-6 tracking-widest">Terpilih: 0 Alumni</p>
             <div class="space-y-4 mb-8">
-                <div>
-                    <label class="text-[9px] font-black text-slate-500 uppercase ml-2 mb-1 block">Filter Gender</label>
-                    <select id="exportGender" onchange="updateExportPreview()" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm outline-none ring-1 ring-white/10"><option value="Semua">Semua Kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select>
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-500 uppercase ml-2 mb-1 block">Filter Alamat / Domisili</label>
-                    <select id="exportDomicile" onchange="updateExportPreview()" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm outline-none ring-1 ring-white/10"><option value="Semua">Semua Alamat Wilayah</option></select>
-                </div>
+                <select id="exportGender" onchange="updateExportPreview()" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm outline-none ring-1 ring-white/10"><option value="Semua">Semua Kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select>
+                <select id="exportDomicile" onchange="updateExportPreview()" class="w-full bg-pesantren-dark border-none rounded-2xl p-4 text-white text-sm outline-none ring-1 ring-white/10"><option value="Semua">Semua Wilayah</option></select>
             </div>
             <div class="flex flex-col gap-3">
                 <button onclick="downloadAlumniCSV()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-3xl uppercase tap-scale flex items-center justify-center gap-3"><i class="ph-bold ph-download-simple text-xl"></i> Unduh CSV</button>
@@ -359,19 +359,21 @@
             if (textEl) textEl.innerText = text;
             if (overlay) overlay.style.display = 'flex';
         };
-        const hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
+        const hideLoading = () => {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+        };
 
-        // --- FETCH DATA (MENCEGAH CACHE DGN PARAMETER WAKTU) ---
+        // --- FETCH DATA DARI GOOGLE SHEETS ---
         const fetchAllData = async () => {
             try {
                 showLoading("Menarik Data Sheets...");
-                // Tambahkan parameter ?t=... agar browser tidak cache hasil lama
                 const url = SCRIPT_URL + "?t=" + new Date().getTime();
                 const response = await fetch(url, { redirect: 'follow' });
                 const textData = await response.text();
                 
                 if(textData.includes("<html") || textData.includes("<body")) {
-                    throw new Error("Akses Ditolak. Pastikan URL benar dan 'Who has access' pada Google Script diatur ke 'Anyone'.");
+                    throw new Error("Akses Ditolak. Pastikan pengaturan Google Script Anda di-set ke 'Who has access: Anyone'.");
                 }
 
                 localAlumni = []; localLoker = []; localSaldo = [];
@@ -473,9 +475,15 @@
 
         window.toggleModal = (id, show) => {
             const el = document.getElementById(id);
+            if (!el) return;
             if (show) {
                 el.classList.remove('hidden');
-                if (id === 'adminModal') setTimeout(() => document.getElementById('adminPin').focus(), 100);
+                if (id === 'adminModal') {
+                    setTimeout(() => {
+                        const pinInput = document.getElementById('adminPin');
+                        if (pinInput) pinInput.focus();
+                    }, 100);
+                }
             } else {
                 el.classList.add('hidden');
             }
@@ -511,10 +519,12 @@
             renderSaldo();
         };
 
-        // --- FUNGSI RENDER TAMPILAN ---
+        // --- RENDER DATA ---
         window.renderAlumni = () => {
             const list = document.getElementById('alumni-list');
-            const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            if (!list) return;
             list.innerHTML = '';
             
             const filtered = localAlumni.filter(a => 
@@ -551,6 +561,7 @@
 
         window.renderLoker = () => {
             const list = document.getElementById('loker-list');
+            if (!list) return;
             list.innerHTML = '';
             
             if(localLoker.length === 0) {
@@ -571,12 +582,11 @@
                     </div>
                     <p class="text-[10px] text-slate-400 leading-relaxed mb-4 whitespace-pre-wrap cursor-pointer loker-click-area">${l.deskripsi || l.desc || ''}</p>
                     <div class="flex gap-2 relative z-10">
-                        <a href="https://wa.me/${kontak}" target="_blank" class="flex-1 text-center py-3 bg-blue-600 rounded-2xl text-[9px] font-black uppercase text-white shadow-lg tap-scale">Lamar Sekarang</a>
+                        <a href="https://wa.me/${kontak}" target="_blank" rel="noopener noreferrer" class="flex-1 text-center py-3 bg-blue-600 rounded-2xl text-[9px] font-black uppercase text-white shadow-lg tap-scale">Lamar Sekarang</a>
                         ${isAdmin ? `<button class="w-12 flex items-center justify-center bg-emerald-500/10 rounded-2xl text-emerald-500 tap-scale loker-edit-btn"><i class="ph ph-pencil"></i></button>` : ''}
                     </div>
                 `;
                 
-                // Binding event listener dengan aman tanpa inline HTML string
                 if (isAdmin) {
                     const clickAreas = card.querySelectorAll('.loker-click-area');
                     clickAreas.forEach(el => el.onclick = () => openLokerForm(l));
@@ -591,6 +601,7 @@
         window.renderSaldo = () => {
             const list = document.getElementById('transaction-list');
             const display = document.getElementById('total-saldo-display');
+            if (!list) return;
             let total = 0;
             list.innerHTML = '';
             
@@ -652,14 +663,26 @@
         };
 
         const updateSettingsUI = () => {
-            document.getElementById('home-title').innerHTML = (localSettings.homeTitle || 'Ahlan wa Sahlan').replace(/\n/g, '<br>');
-            document.getElementById('home-desc').innerText = localSettings.homeDesc || 'Portal IKBAL';
-            document.getElementById('display-bank-info').innerText = localSettings.bank || 'Info bank segera menyusul.';
+            const hTitle = document.getElementById('home-title');
+            if(hTitle) hTitle.innerHTML = (localSettings.homeTitle || 'Ahlan wa Sahlan').replace(/\n/g, '<br>');
             
-            document.getElementById('setHomeTitle').value = localSettings.homeTitle || '';
-            document.getElementById('setHomeDesc').value = localSettings.homeDesc || '';
-            document.getElementById('setWA').value = localSettings.wa || '';
-            document.getElementById('setBank').value = localSettings.bank || '';
+            const hDesc = document.getElementById('home-desc');
+            if(hDesc) hDesc.innerText = localSettings.homeDesc || 'Portal IKBAL';
+            
+            const bankInfo = document.getElementById('display-bank-info');
+            if(bankInfo) bankInfo.innerText = localSettings.bank || 'Info bank segera menyusul.';
+            
+            const setHomeTitle = document.getElementById('setHomeTitle');
+            if(setHomeTitle) setHomeTitle.value = localSettings.homeTitle || '';
+            
+            const setHomeDesc = document.getElementById('setHomeDesc');
+            if(setHomeDesc) setHomeDesc.value = localSettings.homeDesc || '';
+            
+            const setWA = document.getElementById('setWA');
+            if(setWA) setWA.value = localSettings.wa || '';
+            
+            const setBank = document.getElementById('setBank');
+            if(setBank) setBank.value = localSettings.bank || '';
             
             const btnWaAdmin = document.getElementById('btn-wa-admin');
             if(btnWaAdmin) btnWaAdmin.href = `https://wa.me/${(localSettings.wa||'').replace(/\D/g,'')}`;
@@ -681,18 +704,25 @@
         };
 
         window.updateExportPreview = () => {
-            const gender = document.getElementById('exportGender')?.value || 'Semua';
-            const domicile = document.getElementById('exportDomicile')?.value || 'Semua';
+            const genderSelect = document.getElementById('exportGender');
+            const domSelect = document.getElementById('exportDomicile');
+            const gender = genderSelect ? genderSelect.value : 'Semua';
+            const domicile = domSelect ? domSelect.value : 'Semua';
+            
             let filtered = localAlumni;
             if (gender !== 'Semua') filtered = filtered.filter(a => a.gender === gender);
             if (domicile !== 'Semua') filtered = filtered.filter(a => a.domisili === domicile);
+            
             const countEl = document.getElementById('export-count-preview');
             if (countEl) countEl.innerText = `Terpilih: ${filtered.length} Alumni`;
         };
 
         window.downloadAlumniCSV = () => {
-            const gender = document.getElementById('exportGender')?.value || 'Semua';
-            const domicile = document.getElementById('exportDomicile')?.value || 'Semua';
+            const genderSelect = document.getElementById('exportGender');
+            const domSelect = document.getElementById('exportDomicile');
+            const gender = genderSelect ? genderSelect.value : 'Semua';
+            const domicile = domSelect ? domSelect.value : 'Semua';
+            
             let filtered = localAlumni;
             if (gender !== 'Semua') filtered = filtered.filter(a => a.gender === gender);
             if (domicile !== 'Semua') filtered = filtered.filter(a => a.domisili === domicile);
@@ -722,41 +752,81 @@
 
         // --- MANAJEMEN FORM (POPULATING) ---
         window.openAlumniForm = (data = null) => {
-            document.getElementById('alumniForm').reset();
-            document.getElementById('alumniRowIndex').value = data?._rowIndex || '';
-            document.getElementById('btn-delete-alumni').classList.toggle('hidden', !data);
+            const form = document.getElementById('alumniForm');
+            if(form) form.reset();
+            
+            const idInput = document.getElementById('alumniRowIndex');
+            if(idInput) idInput.value = data?._rowIndex || '';
+            
+            const delBtn = document.getElementById('btn-delete-alumni');
+            if(delBtn) delBtn.classList.toggle('hidden', !data);
+            
             if(data) {
-                document.getElementById('alumniNama').value = data.namalengkap || data.nama || '';
-                document.getElementById('alumniAngkatan').value = data.angkatan || '';
-                document.getElementById('alumniDomisili').value = data.domisili || '';
-                document.getElementById('alumniGender').value = data.gender || '';
-                document.getElementById('alumniPekerjaan').value = data.pekerjaan || '';
+                const fNama = document.getElementById('alumniNama');
+                if(fNama) fNama.value = data.namalengkap || data.nama || '';
+                
+                const fAngkatan = document.getElementById('alumniAngkatan');
+                if(fAngkatan) fAngkatan.value = data.angkatan || '';
+                
+                const fDomisili = document.getElementById('alumniDomisili');
+                if(fDomisili) fDomisili.value = data.domisili || '';
+                
+                const fGender = document.getElementById('alumniGender');
+                if(fGender) fGender.value = data.gender || '';
+                
+                const fPekerjaan = document.getElementById('alumniPekerjaan');
+                if(fPekerjaan) fPekerjaan.value = data.pekerjaan || '';
             }
             toggleModal('alumniFormModal', true);
         };
 
         window.openLokerForm = (data = null) => {
-            document.getElementById('lokerForm').reset();
-            document.getElementById('lokerRowIndex').value = data?._rowIndex || '';
-            document.getElementById('btn-delete-loker').classList.toggle('hidden', !data);
+            const form = document.getElementById('lokerForm');
+            if(form) form.reset();
+            
+            const idInput = document.getElementById('lokerRowIndex');
+            if(idInput) idInput.value = data?._rowIndex || '';
+            
+            const delBtn = document.getElementById('btn-delete-loker');
+            if(delBtn) delBtn.classList.toggle('hidden', !data);
+            
             if(data) {
-                document.getElementById('lokerJudul').value = data.judulpekerjaan || data.judul || '';
-                document.getElementById('lokerInstansi').value = data.instansi || '';
-                document.getElementById('lokerDesc').value = data.deskripsi || data.desc || '';
-                document.getElementById('lokerKontak').value = data.kontakwa || data.kontak || '';
+                const fJudul = document.getElementById('lokerJudul');
+                if(fJudul) fJudul.value = data.judulpekerjaan || data.judul || '';
+                
+                const fInstansi = document.getElementById('lokerInstansi');
+                if(fInstansi) fInstansi.value = data.instansi || '';
+                
+                const fDesc = document.getElementById('lokerDesc');
+                if(fDesc) fDesc.value = data.deskripsi || data.desc || '';
+                
+                const fKontak = document.getElementById('lokerKontak');
+                if(fKontak) fKontak.value = data.kontakwa || data.kontak || '';
             }
             toggleModal('lokerFormModal', true);
         };
 
         window.openSaldoForm = (data = null) => {
-            document.getElementById('saldoForm').reset();
-            document.getElementById('txRowIndex').value = data?._rowIndex || '';
-            document.getElementById('btn-delete-tx').classList.toggle('hidden', !data);
-            document.getElementById('saldoFormTitle').innerText = data ? 'Edit Transaksi' : 'Input Kas';
+            const form = document.getElementById('saldoForm');
+            if(form) form.reset();
+            
+            const idInput = document.getElementById('txRowIndex');
+            if(idInput) idInput.value = data?._rowIndex || '';
+            
+            const delBtn = document.getElementById('btn-delete-tx');
+            if(delBtn) delBtn.classList.toggle('hidden', !data);
+            
+            const titleEl = document.getElementById('saldoFormTitle');
+            if(titleEl) titleEl.innerText = data ? 'Edit Transaksi' : 'Input Kas';
+            
             if(data) {
                 setTxType(data.tipe || 'masuk');
-                document.getElementById('txNominal').value = data.nominal || 0;
-                document.getElementById('txKeterangan').value = data.keterangan || '';
+                
+                const fNom = document.getElementById('txNominal');
+                if(fNom) fNom.value = data.nominal || 0;
+                
+                const fKet = document.getElementById('txKeterangan');
+                if(fKet) fKet.value = data.keterangan || '';
                 
                 let dateStr = '';
                 if(data.tanggal) {
@@ -768,24 +838,29 @@
                         dateStr = data.tanggal.replace(/\//g, '-');
                     }
                 }
-                document.getElementById('txTanggal').value = dateStr;
+                const fTgl = document.getElementById('txTanggal');
+                if(fTgl) fTgl.value = dateStr;
             } else {
                 setTxType('masuk');
-                document.getElementById('txTanggal').value = new Date().toISOString().split('T')[0];
+                const fTgl = document.getElementById('txTanggal');
+                if(fTgl) fTgl.value = new Date().toISOString().split('T')[0];
             }
             toggleModal('saldoFormModal', true);
         };
 
         window.setTxType = (type) => {
-            document.getElementById('txType').value = type;
+            const typeInput = document.getElementById('txType');
+            if(typeInput) typeInput.value = type;
+            
             const mBtn = document.getElementById('tx-masuk-btn');
             const kBtn = document.getElementById('tx-keluar-btn');
+            
             if (type === 'masuk') {
-                mBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase bg-emerald-500 text-emerald-950";
-                kBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase text-slate-500";
+                if(mBtn) mBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase bg-emerald-500 text-emerald-950";
+                if(kBtn) kBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase text-slate-500";
             } else {
-                kBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase bg-rose-500 text-rose-950";
-                mBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase text-slate-500";
+                if(kBtn) kBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase bg-rose-500 text-rose-950";
+                if(mBtn) mBtn.className = "flex-1 py-3 rounded-xl text-[10px] font-black uppercase text-slate-500";
             }
         };
 
@@ -796,62 +871,77 @@
         };
 
         // --- SUBMIT DATA KE SHEETS ---
-        document.getElementById('alumniForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = {
-                _rowIndex: document.getElementById('alumniRowIndex').value,
-                nama: document.getElementById('alumniNama').value,
-                angkatan: document.getElementById('alumniAngkatan').value,
-                gender: document.getElementById('alumniGender').value,
-                domisili: document.getElementById('alumniDomisili').value,
-                pekerjaan: document.getElementById('alumniPekerjaan').value,
+        const alumniFormEl = document.getElementById('alumniForm');
+        if(alumniFormEl) {
+            alumniFormEl.onsubmit = async (e) => {
+                e.preventDefault();
+                const payload = {
+                    _rowIndex: document.getElementById('alumniRowIndex').value,
+                    nama: document.getElementById('alumniNama').value,
+                    angkatan: document.getElementById('alumniAngkatan').value,
+                    gender: document.getElementById('alumniGender').value,
+                    domisili: document.getElementById('alumniDomisili').value,
+                    pekerjaan: document.getElementById('alumniPekerjaan').value,
+                };
+                await postDataToSheet('Alumni', payload, 'save', 'alumniFormModal');
             };
-            await postDataToSheet('Alumni', payload, 'save', 'alumniFormModal');
-        };
+        }
 
-        document.getElementById('lokerForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = {
-                _rowIndex: document.getElementById('lokerRowIndex').value,
-                judul: document.getElementById('lokerJudul').value,
-                instansi: document.getElementById('lokerInstansi').value,
-                deskripsi: document.getElementById('lokerDesc').value,
-                kontak: document.getElementById('lokerKontak').value,
+        const lokerFormEl = document.getElementById('lokerForm');
+        if(lokerFormEl) {
+            lokerFormEl.onsubmit = async (e) => {
+                e.preventDefault();
+                const payload = {
+                    _rowIndex: document.getElementById('lokerRowIndex').value,
+                    judul: document.getElementById('lokerJudul').value,
+                    instansi: document.getElementById('lokerInstansi').value,
+                    deskripsi: document.getElementById('lokerDesc').value,
+                    kontak: document.getElementById('lokerKontak').value,
+                };
+                await postDataToSheet('Loker', payload, 'save', 'lokerFormModal');
             };
-            await postDataToSheet('Loker', payload, 'save', 'lokerFormModal');
-        };
+        }
 
-        document.getElementById('saldoForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = {
-                _rowIndex: document.getElementById('txRowIndex').value,
-                tipe: document.getElementById('txType').value,
-                nominal: document.getElementById('txNominal').value,
-                keterangan: document.getElementById('txKeterangan').value,
-                tanggal: document.getElementById('txTanggal').value,
+        const saldoFormEl = document.getElementById('saldoForm');
+        if(saldoFormEl) {
+            saldoFormEl.onsubmit = async (e) => {
+                e.preventDefault();
+                const payload = {
+                    _rowIndex: document.getElementById('txRowIndex').value,
+                    tipe: document.getElementById('txType').value,
+                    nominal: document.getElementById('txNominal').value,
+                    keterangan: document.getElementById('txKeterangan').value,
+                    tanggal: document.getElementById('txTanggal').value,
+                };
+                await postDataToSheet('Saldo', payload, 'save', 'saldoFormModal');
             };
-            await postDataToSheet('Saldo', payload, 'save', 'saldoFormModal');
-        };
+        }
 
-        document.getElementById('homeForm').onsubmit = (e) => {
-            e.preventDefault();
-            localSettings.homeTitle = document.getElementById('setHomeTitle').value;
-            localSettings.homeDesc = document.getElementById('setHomeDesc').value;
-            localStorage.setItem('ikbalSettings', JSON.stringify(localSettings));
-            updateSettingsUI();
-            toggleModal('homeSettingsModal', false);
-            alert("Teks Beranda diperbarui!");
-        };
+        const homeFormEl = document.getElementById('homeForm');
+        if(homeFormEl) {
+            homeFormEl.onsubmit = (e) => {
+                e.preventDefault();
+                localSettings.homeTitle = document.getElementById('setHomeTitle').value;
+                localSettings.homeDesc = document.getElementById('setHomeDesc').value;
+                localStorage.setItem('ikbalSettings', JSON.stringify(localSettings));
+                updateSettingsUI();
+                toggleModal('homeSettingsModal', false);
+                alert("Teks Beranda diperbarui!");
+            };
+        }
 
-        document.getElementById('settingsForm').onsubmit = (e) => {
-            e.preventDefault();
-            localSettings.wa = document.getElementById('setWA').value;
-            localSettings.bank = document.getElementById('setBank').value;
-            localStorage.setItem('ikbalSettings', JSON.stringify(localSettings));
-            updateSettingsUI();
-            toggleModal('appSettingsModal', false);
-            alert("Kontak & Bank diperbarui!");
-        };
+        const settingsFormEl = document.getElementById('settingsForm');
+        if(settingsFormEl) {
+            settingsFormEl.onsubmit = (e) => {
+                e.preventDefault();
+                localSettings.wa = document.getElementById('setWA').value;
+                localSettings.bank = document.getElementById('setBank').value;
+                localStorage.setItem('ikbalSettings', JSON.stringify(localSettings));
+                updateSettingsUI();
+                toggleModal('appSettingsModal', false);
+                alert("Kontak & Bank diperbarui!");
+            };
+        }
 
         // Mulai jalankan ketika halaman dimuat
         window.onload = () => {
